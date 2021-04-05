@@ -2062,7 +2062,6 @@ def check_helm_3(condition, failMsg, passMsg, username):
 
 
 def check_azure_folder_permissions(condition, failMsg, passMsg, username):
-    #username = input("Checking to see if you have access to ~/.azure. Please enter your username: ")
     try:
         path = 'C:\\Users\\'+username+'\\.azure'
         for dirpath, dirnames, filenames in os.walk(path):
@@ -2072,7 +2071,6 @@ def check_azure_folder_permissions(condition, failMsg, passMsg, username):
                     print(path + " "+passMsg)
                 else:
                     cmd = "(Get-Acl "+path+").Access | ?{$_.IdentityReference -match \""+username+"\"} | Select IdentityReference,FileSystemRights"
-                    #permissions = run(["powershell", "-Command", cmd], capture_output=True)
                     print(failMsg + cmd)
     except Exception as e: 
         print(e)
