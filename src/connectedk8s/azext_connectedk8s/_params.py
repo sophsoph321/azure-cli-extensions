@@ -87,3 +87,10 @@ def load_arguments(self, _):
 
     with self.argument_context('connectedk8s troubleshoot') as c:
         c.argument('cluster_name', options_list=['--name', '-n'], id_part='name', help='The name of the connected cluster.')
+        c.argument('storage_account', options_list=['--storage-account'], help='Name or ID of the storage account to save the diagnostic information')
+        c.argument('sas_token', options_list=['--sas-token'], help='The SAS token with writable permission for the storage account.')
+        c.argument('container_logs', options_list=['--container-logs'], help='The list of container logs to collect.')
+        c.argument('kube_objects', options_list=['--kube-objects'], help='The list of kubernetes objects to describe.')
+        c.argument('node_logs', options_list=['--node-logs'], help='The list of node logs to collect. For example, /var/log/cloud-init.log.')
+        c.argument('kube_context', options_list=['--kube-context'], help='Kubconfig context from current machine.')
+        c.argument('kube_config', options_list=['--kube-config'], help='Path to the kube config file.')
