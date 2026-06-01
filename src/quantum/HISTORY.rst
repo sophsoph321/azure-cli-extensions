@@ -3,6 +3,56 @@
 Release History
 ===============
 
+1.0.0b15
++++++++++++++++
+* Fixed bug where workspace providers were appended to wrong property causing workspace creation to fail
+* Improved error handling for `az quantum workspace set` to provide a clear error message when a workspace is not yet fully provisioned
+
+1.0.0b14
++++++++++++++++
+* Updated control plane related commands to use latest API version 2025-12-15-preview
+* Updated data plane related commands to use latest API version 2026-01-15-preview
+* Fixed bug where storage variable is initialized and not used in job submission command
+
+1.0.0b13
++++++++++++++++
+* Updated workspace create command to support job submissions with disabled access keys on linked storage account
+* Updated new storage account to be v2 in workspace creation because of the retirement of General-Purpose v1 (GPv1) storage accounts on October 13, 2026
+
+1.0.0b12
++++++++++++++++
+* Added support for Data Plane v2 including specifying priority parameter as part of job params when submitting a job
+* Removed container creation logic when retrieving linked storage account from the service
+
+1.0.0b11
++++++++++++++++
+* Remove `__import__('pkg_resources').declare_namespace(__name__)` to fix the namespace package issue.
+
+1.0.0b10
+++++++
+* Fixed broken dependency on blob_data_service_factory and replaced with vendored_sdk for azure_storage_blob
+* Fixed bug where workspace params were being ignored during job submission if workspace was not set as default
+* Fixed bug where job submission asked for interactive authentication instead of using azure cli credentials
+* Removed QIO and ADFT features, since those are no longer supported for Azure Quantum service and have both been deprecated
+* During job submit, updated default shots to 100
+* During job submit, updated default format to microsoft.quantum-results.v2
+* During job submit, removed requirement for entrypoint, since most modern providers no longer require the entrypoint field
+* During job submit, simplify logic for content_type and default to qir.v1 for QIR jobs and text/plain for others
+* During job output -o table, added support for fields from new microsoft.quantum-results.v2 format
+* During workspace create, added check for duplicate provider ids to fail fast before sending to service
+
+1.0.0b9
+++++++
+* Update minCliCoreVersion
+
+1.0.0b8
+++++++
+* Fix advertisement of newer version breaking -o output.
+
+1.0.0b7
+++++++
+* Fix import resource SDK error
+
 1.0.0b6
 ++++++
 * [2025-03-19] Version intended to work with QDK version 1.14.0

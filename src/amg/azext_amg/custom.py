@@ -20,7 +20,7 @@ from .aaz.latest.grafana._delete import Delete as _GrafanaDelete
 from .aaz.latest.grafana._update import Update as _GrafanaUpdate
 
 from ._client_factory import cf_amg
-from .utils import get_yes_or_no_option
+from .utils import get_yes_or_no_option, search_folders
 
 logger = get_logger(__name__)
 
@@ -61,6 +61,13 @@ class GrafanaCreate(_GrafanaCreate):
 
         if not args.skip_system_assigned_identity:
             args.identity = {"type": "SystemAssigned"}
+
+        if args.sku_tier and str(args.sku_tier).lower() == "essential":
+            raise ArgumentUsageError(
+                "Creation of Grafana resources with the 'Essential' SKU tier is not supported. "
+                "Supported SKU tiers are: 'Standard'. "
+                "Please specify a supported SKU tier using the '--sku-tier' parameter."
+            )
 
     # override the output method to create role assignments after instance creation
     def _output(self, *args, **kwargs):
@@ -485,72 +492,38 @@ def list_data_sources(cmd, grafana_name, resource_group_name=None, api_key_or_to
 
 def update_data_source(cmd, grafana_name, data_source, definition, resource_group_name=None, api_key_or_token=None):
     data = _find_data_source(cmd, resource_group_name, grafana_name, data_source, api_key_or_token=api_key_or_token)
-    response = _send_request(cmd, resource_group_name, grafana_name, "put", "/api/datasources/" + str(data['id']),
+    response = _send_request(cmd, resource_group_name, grafana_name, "put", "/api/datasources/uid/" + data['uid'],
                              definition, api_key_or_token=api_key_or_token)
     return json.loads(response.content)
 
 
-def list_notification_channels(cmd, grafana_name, resource_group_name=None, short=False, api_key_or_token=None):
-    if short is False:
-        response = _send_request(cmd, resource_group_name, grafana_name, "get", "/api/alert-notifications",
-                                 api_key_or_token=api_key_or_token)
-    else:
-        response = _send_request(cmd, resource_group_name, grafana_name, "get", "/api/alert-notifications/lookup",
-                                 api_key_or_token=api_key_or_token)
-    return json.loads(response.content)
-
-
-def show_notification_channel(cmd, grafana_name, notification_channel, resource_group_name=None, api_key_or_token=None):
-    return _find_notification_channel(cmd, resource_group_name, grafana_name, notification_channel,
-                                      api_key_or_token=api_key_or_token)
-
-
-def create_notification_channel(cmd, grafana_name, definition, resource_group_name=None, api_key_or_token=None):
-    response = _send_request(cmd, resource_group_name, grafana_name, "post", "/api/alert-notifications", definition,
-                             api_key_or_token=api_key_or_token)
-    return json.loads(response.content)
-
-
-def update_notification_channel(cmd, grafana_name, notification_channel, definition, resource_group_name=None,
-                                api_key_or_token=None):
-    data = _find_notification_channel(cmd, resource_group_name, grafana_name, notification_channel,
-                                      api_key_or_token=api_key_or_token)
-    definition['id'] = data['id']
-    response = _send_request(cmd, resource_group_name, grafana_name, "put",
-                             "/api/alert-notifications/" + str(data['id']),
-                             definition, api_key_or_token=api_key_or_token)
-    return json.loads(response.content)
-
-
-def delete_notification_channel(cmd, grafana_name, notification_channel, resource_group_name=None,
-                                api_key_or_token=None):
-    data = _find_notification_channel(cmd, resource_group_name, grafana_name, notification_channel,
-                                      api_key_or_token=api_key_or_token)
-    _send_request(cmd, resource_group_name, grafana_name, "delete", "/api/alert-notifications/" + str(data["id"]),
-                  api_key_or_token=api_key_or_token)
-
-
-def test_notification_channel(cmd, grafana_name, notification_channel, resource_group_name=None, api_key_or_token=None):
-    data = _find_notification_channel(cmd, resource_group_name, grafana_name, notification_channel,
-                                      api_key_or_token=api_key_or_token)
-    response = _send_request(cmd, resource_group_name, grafana_name, "post", "/api/alert-notifications/test",
-                             data, api_key_or_token=api_key_or_token)
-    return json.loads(response.content)
-
-
-def create_folder(cmd, grafana_name, title, resource_group_name=None, api_key_or_token=None, subscription=None):
+def create_folder(cmd, grafana_name, title, parent_folder=None, resource_group_name=None, api_key_or_token=None,
+                  subscription=None):
     payload = {
-        "title": title
+        "title": title,
     }
+    if parent_folder:
+        data = _find_folder(cmd, resource_group_name, grafana_name, parent_folder, api_key_or_token=api_key_or_token)
+        payload["parentUid"] = data["uid"]
+
     response = _send_request(cmd, resource_group_name, grafana_name, "post", "/api/folders", payload,
                              api_key_or_token=api_key_or_token, subscription=subscription)
     return json.loads(response.content)
 
 
 def list_folders(cmd, grafana_name, resource_group_name=None, api_key_or_token=None, subscription=None):
-    response = _send_request(cmd, resource_group_name, grafana_name, "get", "/api/folders",
-                             api_key_or_token=api_key_or_token, subscription=subscription)
-    return json.loads(response.content)
+    endpoint, headers = _get_grafana_request_context(cmd, resource_group_name, grafana_name, subscription,
+                                                     api_key_or_token=api_key_or_token)
+
+    status, content = search_folders(
+        grafana_url=endpoint,
+        http_get_headers=headers
+    )
+
+    if status >= 400:
+        raise ArgumentUsageError(f"Failed to find folders. Error: {content}")
+
+    return content
 
 
 def update_folder(cmd, grafana_name, folder, title, resource_group_name=None, api_key_or_token=None):
@@ -575,55 +548,19 @@ def delete_folder(cmd, grafana_name, folder, resource_group_name=None, api_key_o
 
 
 def _find_folder(cmd, resource_group_name, grafana_name, folder, api_key_or_token=None):
-    response = _send_request(cmd, resource_group_name, grafana_name, "get", "/api/folders/" + folder,
-                             raise_for_error_status=False, api_key_or_token=api_key_or_token)
-    if response.status_code >= 400:
-        response = _send_request(cmd, resource_group_name, grafana_name, "get", "/api/folders",
-                                 api_key_or_token=api_key_or_token)
-        if response.status_code >= 400:
-            raise ArgumentUsageError(f"Couldn't find the folder '{folder}'. Ex: {response.status_code}")
-        result = json.loads(response.content)
-        result = [f for f in result if f["title"] == folder]
-        if len(result) == 0:
-            raise ArgumentUsageError(f"Couldn't find the folder '{folder}'. Ex: {response.status_code}")
-        if len(result) > 1:
-            raise ArgumentUsageError((f"More than one folder has the same title of '{folder}'. Please use other "
-                                     f"unique identifiers"))
-        return result[0]
-    return json.loads(response.content)
+    folders = list_folders(cmd, grafana_name, resource_group_name=resource_group_name,
+                           api_key_or_token=api_key_or_token)
 
+    # try uid first
+    match = next((f for f in folders if f['uid'] == folder), None)
+    if match:
+        return match
 
-def list_api_keys(cmd, grafana_name, resource_group_name=None):
-    response = _send_request(cmd, resource_group_name, grafana_name, "get",
-                             "/api/auth/keys?includedExpired=false&accesscontrol=true")
-    return json.loads(response.content)
-
-
-def delete_api_key(cmd, grafana_name, key, resource_group_name=None):
-    # Find the key id based on name
-    try:
-        int(key)
-    except ValueError:
-        # looks like a key name is provided, need to convert to id to delete
-        keys = list_api_keys(cmd, grafana_name, resource_group_name=resource_group_name)
-        temp = next((k for k in keys if k['name'].lower() == key.lower()), None)
-        if temp:
-            key = str(temp['id'])
-    _send_request(cmd, resource_group_name, grafana_name, "delete", "/api/auth/keys/" + key)
-
-
-def create_api_key(cmd, grafana_name, key, role=None, time_to_live=None, resource_group_name=None):
-    seconds = _convert_duration_to_seconds(time_to_live)
-
-    data = {
-        "name": key,
-        "role": role,
-        "secondsToLive": seconds
-    }
-    response = _send_request(cmd, resource_group_name, grafana_name, "post", "/api/auth/keys", data)
-    content = json.loads(response.content)
-    logger.warning("You will only be able to view this key here once. Please save it in a secure place.")
-    return content
+    # If we get here, the folder is not found by uid, so we try by title
+    match = next((f for f in folders if f['title'] == folder), None)
+    if not match:
+        raise ArgumentUsageError(f"Couldn't find the folder '{folder}'.")
+    return match
 
 
 def _convert_duration_to_seconds(time_to_live):
@@ -846,32 +783,25 @@ def list_monitors(cmd, grafana_name, resource_group_name=None):
 
 
 def _find_data_source(cmd, resource_group_name, grafana_name, data_source, api_key_or_token=None):
-    response = _send_request(cmd, resource_group_name, grafana_name, "get", "/api/datasources/name/" + data_source,
-                             raise_for_error_status=False, api_key_or_token=api_key_or_token)
-    if response.status_code >= 400:
-        response = _send_request(cmd, resource_group_name, grafana_name, "get", "/api/datasources/" + data_source,
+    last_response = None
+    for path in (f"/api/datasources/name/{data_source}",
+                 f"/api/datasources/uid/{data_source}"):
+        response = _send_request(cmd, resource_group_name, grafana_name, "get", path,
                                  raise_for_error_status=False, api_key_or_token=api_key_or_token)
-        if response.status_code >= 400:
-            response = _send_request(cmd, resource_group_name, grafana_name,
-                                     "get", "/api/datasources/uid/" + data_source,
-                                     raise_for_error_status=False, api_key_or_token=api_key_or_token)
-    if response.status_code >= 400:
-        raise ArgumentUsageError(f"Couldn't found data source {data_source}. Ex: {response.status_code}")
-    return json.loads(response.content)
+        if response.status_code < 400:
+            return json.loads(response.content)
+        last_response = response
 
-
-def _find_notification_channel(cmd, resource_group_name, grafana_name, notification_channel, api_key_or_token=None):
-    response = _send_request(cmd, resource_group_name, grafana_name, "get",
-                             "/api/alert-notifications/" + notification_channel,
-                             raise_for_error_status=False, api_key_or_token=api_key_or_token)
-    if response.status_code >= 400:
-        response = _send_request(cmd, resource_group_name, grafana_name,
-                                 "get", "/api/alert-notifications/uid/" + notification_channel,
-                                 raise_for_error_status=False, api_key_or_token=api_key_or_token)
-    if response.status_code >= 400:
-        raise ArgumentUsageError(
-            f"Couldn't found notification channel {notification_channel}. Ex: {response.status_code}")
-    return json.loads(response.content)
+    # Both name and UID lookups failed. If the input is numeric, the user may be passing a
+    # legacy data source ID -- those endpoints (/api/datasources/{id}) were deprecated in
+    # Grafana 9 and are disabled by default in Grafana 13, so add a hint to the error.
+    message = f"Couldn't find data source {data_source} by name or UID."
+    if data_source.isdigit():
+        message += (" Numeric data source IDs are no longer supported. "
+                    "Pass the data source name or UID instead.")
+    if last_response is not None:
+        message += f" (last status code: {last_response.status_code})"
+    raise ArgumentUsageError(message)
 
 
 # For UX: we accept a file path for complex payload such as dashboard/data-source definition
@@ -914,14 +844,8 @@ def _get_grafana_endpoint(cmd, resource_group_name, grafana_name, subscription):
 
 def _send_request(cmd, resource_group_name, grafana_name, http_method, path, body=None, raise_for_error_status=True,
                   api_key_or_token=None, subscription=None):
-    endpoint = _get_grafana_endpoint(cmd, resource_group_name, grafana_name, subscription)
-
-    creds = _get_data_plane_creds(cmd, api_key_or_token, subscription)
-
-    headers = {
-        "content-type": "application/json",
-        "authorization": "Bearer " + creds[1]
-    }
+    endpoint, headers = _get_grafana_request_context(cmd, resource_group_name, grafana_name, subscription,
+                                                     api_key_or_token=api_key_or_token)
 
     # TODO: handle re-try on 429
     response = requests.request(http_method, url=endpoint + path, headers=headers, json=body, timeout=60,
@@ -932,3 +856,14 @@ def _send_request(cmd, resource_group_name, grafana_name, http_method, path, bod
             response.raise_for_status()
     # TODO: log headers, requests and response
     return response
+
+
+def _get_grafana_request_context(cmd, resource_group_name, grafana_name, subscription, api_key_or_token=None):
+    endpoint = _get_grafana_endpoint(cmd, resource_group_name, grafana_name, subscription)
+    creds = _get_data_plane_creds(cmd, api_key_or_token, subscription)
+    headers = {
+        "content-type": "application/json",
+        "authorization": "Bearer " + creds[1]
+    }
+
+    return endpoint, headers

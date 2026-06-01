@@ -3,6 +3,31 @@
 Release History
 ===============
 
+1.0.0b7
+++++++++
+* Unpin cssc image version so that the latest cached image in task infra can be automatically picked for workflow runs. This allows us to push patch updates to cssc image without needing to update the task definition and release a new version of the extension.
+
+1.0.0b6
+++++++++
+* Fix issue with DNL registry names when scheduling tasks
+
+1.0.0b5
+++++++++
+* Update minCliCoreVersion
+
+1.0.0b4
++++++++
+* Fix resource SDK import error
+
+1.0.0b3
++++++++
+* Remove msrestazure dependency
+
+1.0.0b2
+++++++
+* Bug fix: Updated to allow for az login when the account doesn't have any active subscriptions
+
+
 1.0.0b1
 ++++++
 * Release for Public Preview

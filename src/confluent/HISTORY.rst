@@ -2,6 +2,24 @@
 
 Release History
 ===============
+1.2.0
++++++
+* Updated to API version 2025-08-18-preview.
+* Added `az confluent agreement list` and `az confluent agreement default create` commands for managing Confluent marketplace agreements.
+* Added `az confluent organization environment create/delete/update` commands for managing environments within a Confluent organization.
+* Added `az confluent organization environment cluster create/delete/update` commands for managing clusters within an environment.
+* Added `az confluent organization environment cluster connector create/delete/list/show/update` commands for managing connectors within a cluster.
+* Added `az confluent organization environment cluster topic create/delete/list/show/update` commands for managing topics within a cluster.
+* Added `az confluent validation orgvalidate` and `az confluent validation orgvalidate-v2` commands for validating Confluent organization configurations.
+
+1.1.0
++++++
+* Updated az confluent organization create command to accept term_id as an optional parameter.
+
+1.0.0
++++++
+* Updated CLI command descriptions to be more user and support az mcp commands.
+
 0.6.0
 +++++
 * Added more commands for user access management

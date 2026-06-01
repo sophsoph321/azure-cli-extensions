@@ -13,19 +13,19 @@ from azure.cli.core.aaz import *
 
 @register_command(
     "vmware private-cloud rotate-nsxt-password",
-    confirmation="Any services connected using these credentials will stop working and may cause you to be locked out of your account.\n\nCheck if you're using your cloudadmin credentials for any connected services like backup and disaster recovery appliances, VMware HCX, or any vRealize suite products. Verify you're not using cloudadmin credentials for connected services before generating a new password.\n\nIf you are using cloudadmin for connected services, learn how you can setup a connection to an external identity source to create and manage new credentials for your connected services: https://learn.microsoft.com/en-us/azure/azure-vmware/configure-identity-source-vcenter\n\nPress Y to confirm no services are using my cloudadmin credentials to connect to vCenter",
+    confirmation="Any services connected using these credentials will stop working and may cause you to be locked out of your account.\n\nCheck if you're using your cloudadmin credentials for any connected services like backup and disaster recovery appliances, VMware HCX, or any vRealize suite products. Verify you're not using cloudadmin credentials for connected services before generating a new password.\n\nIf you are using cloudadmin for connected services, learn how you can setup a connection to an external identity source to create and manage new credentials for your connected services: https://docs.microsoft.com/en-us/azure/azure-vmware/configure-identity-source-vcenter\n\nPress Y to confirm no services are using my cloudadmin credentials to connect to vCenter",
 )
 class RotateNsxtPassword(AAZCommand):
     """Rotate the NSX-T Manager password
 
     :example: Rotate the NSX-T password
-        az rotate-nsxt-password --resource-group MyResourceGroup --private-cloud MyPrivateCloud
+        az vmware private-cloud rotate-nsxt-password --resource-group group1 --private-cloud cloud1
     """
 
     _aaz_info = {
-        "version": "2023-09-01",
+        "version": "2025-09-01",
         "resources": [
-            ["mgmt-plane", "/subscriptions/{}/resourcegroups/{}/providers/microsoft.avs/privateclouds/{}/rotatensxtpassword", "2023-09-01"],
+            ["mgmt-plane", "/subscriptions/{}/resourcegroups/{}/providers/microsoft.avs/privateclouds/{}/rotatensxtpassword", "2025-09-01"],
         ]
     }
 
@@ -150,7 +150,7 @@ class RotateNsxtPassword(AAZCommand):
         def query_parameters(self):
             parameters = {
                 **self.serialize_query_param(
-                    "api-version", "2023-09-01",
+                    "api-version", "2025-09-01",
                     required=True,
                 ),
             }
@@ -207,6 +207,7 @@ class RotateNsxtPassword(AAZCommand):
             _schema_on_200.type = AAZStrType(
                 flags={"read_only": True},
             )
+            _schema_on_200.zones = AAZListType()
 
             identity = cls._schema_on_200.identity
             identity.principal_id = AAZStrType(
@@ -286,6 +287,9 @@ class RotateNsxtPassword(AAZCommand):
             properties.vcenter_password = AAZStrType(
                 serialized_name="vcenterPassword",
                 flags={"secret": True},
+            )
+            properties.vcf_license = AAZObjectType(
+                serialized_name="vcfLicense",
             )
             properties.virtual_network_id = AAZStrType(
                 serialized_name="virtualNetworkId",
@@ -407,6 +411,46 @@ class RotateNsxtPassword(AAZCommand):
             hosts = cls._schema_on_200.properties.management_cluster.hosts
             hosts.Element = AAZStrType()
 
+            vcf_license = cls._schema_on_200.properties.vcf_license
+            vcf_license.kind = AAZStrType(
+                flags={"required": True},
+            )
+            vcf_license.provisioning_state = AAZStrType(
+                serialized_name="provisioningState",
+                flags={"read_only": True},
+            )
+
+            disc_vcf5 = cls._schema_on_200.properties.vcf_license.discriminate_by("kind", "vcf5")
+            disc_vcf5.broadcom_contract_number = AAZStrType(
+                serialized_name="broadcomContractNumber",
+            )
+            disc_vcf5.broadcom_site_id = AAZStrType(
+                serialized_name="broadcomSiteId",
+            )
+            disc_vcf5.cores = AAZIntType(
+                flags={"required": True},
+            )
+            disc_vcf5.end_date = AAZStrType(
+                serialized_name="endDate",
+                flags={"required": True},
+            )
+            disc_vcf5.labels = AAZListType()
+            disc_vcf5.license_key = AAZStrType(
+                serialized_name="licenseKey",
+                flags={"secret": True},
+            )
+
+            labels = cls._schema_on_200.properties.vcf_license.discriminate_by("kind", "vcf5").labels
+            labels.Element = AAZObjectType()
+
+            _element = cls._schema_on_200.properties.vcf_license.discriminate_by("kind", "vcf5").labels.Element
+            _element.key = AAZStrType(
+                flags={"required": True},
+            )
+            _element.value = AAZStrType(
+                flags={"required": True},
+            )
+
             sku = cls._schema_on_200.sku
             sku.capacity = AAZIntType()
             sku.family = AAZStrType()
@@ -438,6 +482,9 @@ class RotateNsxtPassword(AAZCommand):
 
             tags = cls._schema_on_200.tags
             tags.Element = AAZStrType()
+
+            zones = cls._schema_on_200.zones
+            zones.Element = AAZStrType()
 
             return cls._schema_on_200
 

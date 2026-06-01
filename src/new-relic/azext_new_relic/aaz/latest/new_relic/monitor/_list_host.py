@@ -15,7 +15,7 @@ from azure.cli.core.aaz import *
     "new-relic monitor list-host",
 )
 class ListHost(AAZCommand):
-    """List the compute vm resources currently being monitored by the NewRelic resource.
+    """List all VM resources currently being monitored by the New Relic monitor resource, helping you manage observability.
 
     :example: List the compute vm resources currently being monitored by the NewRelic resource.
         az new-relic monitor list-host --resource-group MyResourceGroup --monitor-name MyNewRelicMonitor --user-email UserEmail@123.com --vm-ids MyVmIds
@@ -64,7 +64,7 @@ class ListHost(AAZCommand):
             help="User Email",
             required=True,
             fmt=AAZStrArgFormat(
-                pattern="^[A-Za-z0-9._%+-]+@(?:[A-Za-z0-9-]+\.)+[A-Za-z]{2,}$",
+                pattern="^[A-Za-z0-9._%+-]+@(?:[A-Za-z0-9-]+\\.)+[A-Za-z]{2,}$",
             ),
         )
         _args_schema.vm_ids = AAZListArg(

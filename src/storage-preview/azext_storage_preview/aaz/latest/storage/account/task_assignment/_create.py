@@ -13,16 +13,18 @@ from azure.cli.core.aaz import *
 
 @register_command(
     "storage account task-assignment create",
-    is_preview=True,
 )
 class Create(AAZCommand):
-    """Create creates a new storage task assignment sub-resource with the specified parameters. If a storage task assignment is already created and a subsequent create request is issued with different properties, the storage task assignment properties will be updated. If a storage task assignment is already created and a subsequent create or update request is issued with the exact same set of properties, the request will succeed.
+    """Create a new storage task assignment sub-resource with the specified parameters. If a storage task assignment is already created and a subsequent create request is issued with different properties, the storage task assignment properties will be updated. If a storage task assignment is already created and a subsequent create or update request is issued with the exact same set of properties, the request will succeed.
+
+    :example: Create Storage TaskAssignment
+        az storage account task-assignment create -g rg_name -n task_assignment_name --account-name storage_account_name --description 'My Storage task assignment' --enabled false --task-id 'task_id' --report '{prefix:container1}' --execution-context '{trigger:{type:OnSchedule,parameters:{start-from:'2024-08-14T21:52:47Z',end-by:'2024-09-04T21:52:47.203074Z',interval:10,interval-unit:Days}},target:{prefix:[prefix1,prefix2],exclude-prefix:[prefix3]}}'
     """
 
     _aaz_info = {
-        "version": "2023-05-01",
+        "version": "2025-08-01",
         "resources": [
-            ["mgmt-plane", "/subscriptions/{}/resourcegroups/{}/providers/microsoft.storage/storageaccounts/{}/storagetaskassignments/{}", "2023-05-01"],
+            ["mgmt-plane", "/subscriptions/{}/resourcegroups/{}/providers/microsoft.storage/storageaccounts/{}/storagetaskassignments/{}", "2025-08-01"],
         ]
     }
 
@@ -61,7 +63,7 @@ class Create(AAZCommand):
             help="The name of the storage task assignment within the specified resource group. Storage task assignment names must be between 3 and 24 characters in length and use numbers and lower-case letters only.",
             required=True,
             fmt=AAZStrArgFormat(
-                pattern="^[a-z0-9]{3,24}$",
+                pattern="^[a-z][a-z0-9]{2,23}$",
                 max_length=24,
                 min_length=3,
             ),
@@ -74,31 +76,26 @@ class Create(AAZCommand):
             options=["--description"],
             arg_group="Properties",
             help="Text that describes the purpose of the storage task assignment",
-            required=True,
         )
         _args_schema.enabled = AAZBoolArg(
             options=["--enabled"],
             arg_group="Properties",
             help="Whether the storage task assignment is enabled or not",
-            required=True,
         )
         _args_schema.execution_context = AAZObjectArg(
             options=["--execution-context"],
             arg_group="Properties",
             help="The storage task assignment execution context",
-            required=True,
         )
         _args_schema.report = AAZObjectArg(
             options=["--report"],
             arg_group="Properties",
             help="The storage task assignment report",
-            required=True,
         )
         _args_schema.task_id = AAZResourceIdArg(
             options=["--task-id"],
             arg_group="Properties",
             help="Id of the corresponding storage task",
-            required=True,
         )
 
         execution_context = cls._args_schema.execution_context
@@ -138,13 +135,16 @@ class Create(AAZCommand):
             options=["type"],
             help="The trigger type of the storage task assignment execution",
             required=True,
-            enum={"OnSchedule": "OnSchedule", "RunOnce": "RunOnce"},
+            enum={"MockRun": "MockRun", "OnSchedule": "OnSchedule", "RunOnce": "RunOnce"},
         )
 
         parameters = cls._args_schema.execution_context.trigger.parameters
         parameters.end_by = AAZDateTimeArg(
             options=["end-by"],
             help="When to end task execution. This is a required field when ExecutionTrigger.properties.type is 'OnSchedule'; this property should not be present when ExecutionTrigger.properties.type is 'RunOnce'",
+            fmt=AAZDateTimeFormat(
+                protocol="iso",
+            ),
         )
         parameters.interval = AAZIntArg(
             options=["interval"],
@@ -161,10 +161,16 @@ class Create(AAZCommand):
         parameters.start_from = AAZDateTimeArg(
             options=["start-from"],
             help="When to start task execution. This is a required field when ExecutionTrigger.properties.type is 'OnSchedule'; this property should not be present when ExecutionTrigger.properties.type is 'RunOnce'",
+            fmt=AAZDateTimeFormat(
+                protocol="iso",
+            ),
         )
         parameters.start_on = AAZDateTimeArg(
             options=["start-on"],
             help="When to start task execution. This is an optional field when ExecutionTrigger.properties.type is 'RunOnce'; this property should not be present when ExecutionTrigger.properties.type is 'OnSchedule'",
+            fmt=AAZDateTimeFormat(
+                protocol="iso",
+            ),
         )
 
         report = cls._args_schema.report
@@ -204,7 +210,7 @@ class Create(AAZCommand):
                     session,
                     self.on_200_201,
                     self.on_error,
-                    lro_options={"final-state-via": "location"},
+                    lro_options={"final-state-via": "azure-async-operation"},
                     path_format_arguments=self.url_parameters,
                 )
             if session.http_response.status_code in [200, 201]:
@@ -213,7 +219,7 @@ class Create(AAZCommand):
                     session,
                     self.on_200_201,
                     self.on_error,
-                    lro_options={"final-state-via": "location"},
+                    lro_options={"final-state-via": "azure-async-operation"},
                     path_format_arguments=self.url_parameters,
                 )
 
@@ -232,7 +238,7 @@ class Create(AAZCommand):
 
         @property
         def error_format(self):
-            return "MgmtErrorFormat"
+            return "ODataV4Format"
 
         @property
         def url_parameters(self):
@@ -260,7 +266,7 @@ class Create(AAZCommand):
         def query_parameters(self):
             parameters = {
                 **self.serialize_query_param(
-                    "api-version", "2023-05-01",
+                    "api-version", "2025-08-01",
                     required=True,
                 ),
             }
@@ -285,7 +291,7 @@ class Create(AAZCommand):
                 typ=AAZObjectType,
                 typ_kwargs={"flags": {"required": True, "client_flatten": True}}
             )
-            _builder.set_prop("properties", AAZObjectType, ".", typ_kwargs={"flags": {"required": True}})
+            _builder.set_prop("properties", AAZObjectType)
 
             properties = _builder.get(".properties")
             if properties is not None:
@@ -356,8 +362,10 @@ class Create(AAZCommand):
             _schema_on_200_201.name = AAZStrType(
                 flags={"read_only": True},
             )
-            _schema_on_200_201.properties = AAZObjectType(
-                flags={"required": True},
+            _schema_on_200_201.properties = AAZObjectType()
+            _schema_on_200_201.system_data = AAZObjectType(
+                serialized_name="systemData",
+                flags={"read_only": True},
             )
             _schema_on_200_201.type = AAZStrType(
                 flags={"read_only": True},
@@ -491,6 +499,26 @@ class Create(AAZCommand):
             run_status.task_version = AAZStrType(
                 serialized_name="taskVersion",
                 flags={"read_only": True},
+            )
+
+            system_data = cls._schema_on_200_201.system_data
+            system_data.created_at = AAZStrType(
+                serialized_name="createdAt",
+            )
+            system_data.created_by = AAZStrType(
+                serialized_name="createdBy",
+            )
+            system_data.created_by_type = AAZStrType(
+                serialized_name="createdByType",
+            )
+            system_data.last_modified_at = AAZStrType(
+                serialized_name="lastModifiedAt",
+            )
+            system_data.last_modified_by = AAZStrType(
+                serialized_name="lastModifiedBy",
+            )
+            system_data.last_modified_by_type = AAZStrType(
+                serialized_name="lastModifiedByType",
             )
 
             return cls._schema_on_200_201

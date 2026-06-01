@@ -22,9 +22,9 @@ class Show(AAZCommand):
     """
 
     _aaz_info = {
-        "version": "2023-09-01",
+        "version": "2025-09-01",
         "resources": [
-            ["mgmt-plane", "/subscriptions/{}/resourcegroups/{}/providers/microsoft.avs/privateclouds/{}/clusters/{}/virtualmachines/{}", "2023-09-01"],
+            ["mgmt-plane", "/subscriptions/{}/resourcegroups/{}/providers/microsoft.avs/privateclouds/{}/clusters/{}/virtualmachines/{}", "2025-09-01"],
         ]
     }
 
@@ -49,18 +49,12 @@ class Show(AAZCommand):
             help="Name of the cluster in the private cloud",
             required=True,
             id_part="child_name_1",
-            fmt=AAZStrArgFormat(
-                pattern="^[-\\w\\._]+$",
-            ),
         )
         _args_schema.private_cloud = AAZStrArg(
             options=["-c", "--private-cloud"],
             help="Name of the private cloud",
             required=True,
             id_part="name",
-            fmt=AAZStrArgFormat(
-                pattern="^[-\\w\\._]+$",
-            ),
         )
         _args_schema.resource_group = AAZResourceGroupNameArg(
             required=True,
@@ -70,9 +64,6 @@ class Show(AAZCommand):
             help="ID of the virtual machine.",
             required=True,
             id_part="child_name_2",
-            fmt=AAZStrArgFormat(
-                pattern="^[-\\w\\._]+$",
-            ),
         )
         return cls._args_schema
 
@@ -149,7 +140,7 @@ class Show(AAZCommand):
         def query_parameters(self):
             parameters = {
                 **self.serialize_query_param(
-                    "api-version", "2023-09-01",
+                    "api-version", "2025-09-01",
                     required=True,
                 ),
             }

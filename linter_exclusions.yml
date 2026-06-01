@@ -37,10 +37,13 @@ aks create:
     node_public_ip_prefix_id:
       rule_exclusions:
         - option_length_too_long
-    enable_pod_security_policy:
+    node_public_ip_prefix_ids:
+      rule_exclusions:
+        - option_length_too_long
+    enable_private_cluster:
       rule_exclusions:
       - option_length_too_long
-    enable_private_cluster:
+    enable_application_load_balancer:
       rule_exclusions:
       - option_length_too_long
     load_balancer_idle_timeout:
@@ -124,6 +127,17 @@ aks create:
     cluster_service_load_balancer_health_probe_mode:
       rule_exclusions:
       - option_length_too_long
+    enable_service_account_image_pull:
+      rule_exclusions:
+      - option_length_too_long
+    service_account_image_pull_default_managed_identity_id:
+      rule_exclusions:
+      - option_length_too_long
+aks nodepool add:
+  parameters:
+    node_public_ip_prefix_ids:
+      rule_exclusions:
+        - option_length_too_long
 aks update:
   parameters:
     aad_admin_group_object_ids:
@@ -133,12 +147,6 @@ aks update:
       rule_exclusions:
       - option_length_too_long
     cluster_autoscaler_profile:
-      rule_exclusions:
-      - option_length_too_long
-    disable_pod_security_policy:
-      rule_exclusions:
-      - option_length_too_long
-    enable_pod_security_policy:
       rule_exclusions:
       - option_length_too_long
     load_balancer_idle_timeout:
@@ -207,6 +215,26 @@ aks update:
     cluster_service_load_balancer_health_probe_mode:
       rule_exclusions:
       - option_length_too_long
+    enable_application_load_balancer:
+      rule_exclusions:
+      - option_length_too_long
+    disable_application_load_balancer:
+      rule_exclusions:
+      - option_length_too_long
+    enable_service_account_image_pull:
+      rule_exclusions:
+      - option_length_too_long
+    disable_service_account_image_pull:
+      rule_exclusions:
+      - option_length_too_long
+    service_account_image_pull_default_managed_identity_id:
+      rule_exclusions:
+      - option_length_too_long
+aks agent:
+  parameters:
+    prompt:
+      rule_exclusions:
+        - no_positional_parameters
 arcdata dc config init:
   parameters:
     path:
@@ -396,6 +424,75 @@ codespace plan create:
 confidentialledger managedccfs update:
   rule_exclusions:
   - missing_command_test_coverage
+confluent organization environment:
+  rule_exclusions:
+  - require_wait_command_if_no_wait
+confluent organization environment cluster:
+  rule_exclusions:
+  - require_wait_command_if_no_wait
+confluent organization environment cluster connector:
+  rule_exclusions:
+  - require_wait_command_if_no_wait
+confluent organization environment cluster topic:
+  rule_exclusions:
+  - require_wait_command_if_no_wait
+confluent agreement default create:
+  rule_exclusions:
+  - missing_command_example
+confluent organization environment create:
+  rule_exclusions:
+  - missing_command_example
+  parameters:
+    stream_governance_config:
+      rule_exclusions:
+      - option_length_too_long
+confluent organization environment update:
+  rule_exclusions:
+  - missing_command_example
+  parameters:
+    stream_governance_config:
+      rule_exclusions:
+      - option_length_too_long
+confluent organization environment cluster create:
+  rule_exclusions:
+  - missing_command_example
+confluent organization environment cluster update:
+  rule_exclusions:
+  - missing_command_example
+confluent organization environment cluster connector create:
+  rule_exclusions:
+  - missing_command_example
+  parameters:
+    connector_service_type_info:
+      rule_exclusions:
+      - option_length_too_long
+confluent organization environment cluster connector update:
+  rule_exclusions:
+  - missing_command_example
+  parameters:
+    connector_service_type_info:
+      rule_exclusions:
+      - option_length_too_long
+confluent organization environment cluster topic create:
+  rule_exclusions:
+  - missing_command_example
+  parameters:
+    partitions_reassignments:
+      rule_exclusions:
+      - option_length_too_long
+confluent organization environment cluster topic update:
+  rule_exclusions:
+  - missing_command_example
+  parameters:
+    partitions_reassignments:
+      rule_exclusions:
+      - option_length_too_long
+confluent validation orgvalidate:
+  rule_exclusions:
+  - missing_command_example
+confluent validation orgvalidate-v2:
+  rule_exclusions:
+  - missing_command_example
 containerapp env create:
   parameters:
     infrastructure_subnet_resource_id:
@@ -1211,6 +1308,14 @@ import-export update:
     backup_drive_manifest:
       rule_exclusions:
       - option_length_too_long
+iot adr ns policy update:
+  parameters:
+    certificate_key_type:
+      rule_exclusions:
+      - no_parameter_defaults_for_update_commands
+    certificate_validity_days:
+      rule_exclusions:
+      - no_parameter_defaults_for_update_commands
 iot central enrollment-group update:
   parameters:
     api_version:
@@ -1319,21 +1424,52 @@ iot central user update:
 iot du update:
   rule_exclusions:
     - require_wait_command_if_no_wait
+iot dps enrollment list:
+  rule_exclusions:
+  - no_ids_for_list_commands
 iot dps enrollment update:
   parameters:
     auth_type_dataplane:
       rule_exclusions:
       - no_parameter_defaults_for_update_commands
+iot dps enrollment-group list:
+  rule_exclusions:
+  - no_ids_for_list_commands
+iot dps enrollment-group registration list:
+  rule_exclusions:
+  - no_ids_for_list_commands
 iot dps enrollment-group update:
   parameters:
     auth_type_dataplane:
       rule_exclusions:
       - no_parameter_defaults_for_update_commands
+iot dps linked-hub create:
+  parameters:
+    apply_allocation_policy:
+      rule_exclusions:
+      - option_length_too_long
+    hub_resource_group:
+      rule_exclusions:
+      - parameter_should_not_end_in_resource_group
+iot dps linked-hub update:
+  parameters:
+    apply_allocation_policy:
+      rule_exclusions:
+      - option_length_too_long
+iot dps registration list:
+  rule_exclusions:
+  - no_ids_for_list_commands
+iot hub certificate list:
+  rule_exclusions:
+  - no_ids_for_list_commands
 iot hub configuration update:
   parameters:
     auth_type_dataplane:
       rule_exclusions:
       - no_parameter_defaults_for_update_commands
+iot hub consumer-group list:
+  rule_exclusions:
+  - no_ids_for_list_commands
 iot hub device-identity update:
   parameters:
     auth_type_dataplane:
@@ -1374,6 +1510,9 @@ iot hub message-endpoint create storage-container:
     endpoint_resource_group:
       rule_exclusions:
       - parameter_should_not_end_in_resource_group
+iot hub message-endpoint list:
+  rule_exclusions:
+  - no_ids_for_list_commands
 iot hub message-endpoint update cosmosdb-container:
   parameters:
     endpoint_resource_group:
@@ -1399,6 +1538,12 @@ iot hub message-endpoint update storage-container:
     endpoint_resource_group:
       rule_exclusions:
       - parameter_should_not_end_in_resource_group
+iot hub message-enrichment list:
+  rule_exclusions:
+  - no_ids_for_list_commands
+iot hub message-route list:
+  rule_exclusions:
+  - no_ids_for_list_commands
 iot hub module-identity update:
   parameters:
     auth_type_dataplane:
@@ -1409,6 +1554,20 @@ iot hub module-twin update:
     auth_type_dataplane:
       rule_exclusions:
       - no_parameter_defaults_for_update_commands
+iot hub policy list:
+  rule_exclusions:
+  - no_ids_for_list_commands
+iot hub route list:
+  rule_exclusions:
+  - no_ids_for_list_commands
+iot hub routing-endpoint create:
+  parameters:
+    endpoint_resource_group:
+      rule_exclusions:
+      - parameter_should_not_end_in_resource_group
+iot hub routing-endpoint list:
+  rule_exclusions:
+  - no_ids_for_list_commands
 iot hub state migrate:
   parameters:
     orig_resource_group_name:
@@ -1424,20 +1583,44 @@ iot edge deployment update:
       - no_parameter_defaults_for_update_commands
 iot ops asset create:
   parameters:
-    cluster_resource_group:
+    instance_resource_group:
       rule_exclusions:
       - parameter_should_not_end_in_resource_group
-    custom_location_resource_group:
-      rule_exclusions:
-      - parameter_should_not_end_in_resource_group
-iot ops asset endpoint create:
+iot ops asset query:
   parameters:
-    cluster_resource_group:
+    instance_resource_group:
       rule_exclusions:
       - parameter_should_not_end_in_resource_group
-    custom_location_resource_group:
+iot ops asset endpoint create custom:
+  parameters:
+    instance_resource_group:
       rule_exclusions:
       - parameter_should_not_end_in_resource_group
+iot ops asset endpoint create onvif:
+  parameters:
+    instance_resource_group:
+      rule_exclusions:
+      - parameter_should_not_end_in_resource_group
+iot ops asset endpoint create opcua:
+  parameters:
+    instance_resource_group:
+      rule_exclusions:
+      - parameter_should_not_end_in_resource_group
+iot ops asset endpoint query:
+  parameters:
+    instance_resource_group:
+      rule_exclusions:
+      - parameter_should_not_end_in_resource_group
+iot ops ns device create:
+  parameters:
+    instance_resource_group:
+      rule_exclusions:
+      - parameter_should_not_end_in_resource_group
+iot ops broker persist update:
+  parameters:
+    broker_name:
+      rule_exclusions:
+      - no_parameter_defaults_for_update_commands
 k8sconfiguration create:
   parameters:
     helm_operator_version:
@@ -2106,6 +2289,36 @@ network front-door waf-policy update:
     captcha_expiration_in_minutes:
       rule_exclusions:
       - option_length_too_long
+network front-door waf-policy managed-rules:
+  rule_exclusions:
+  - require_wait_command_if_no_wait
+network front-door waf-policy managed-rules exclusion:
+  rule_exclusions:
+  - require_wait_command_if_no_wait
+network front-door waf-policy managed-rules exclusion list:
+  rule_exclusions:
+  - no_ids_for_list_commands
+network front-door waf-policy managed-rules list:
+  rule_exclusions:
+  - no_ids_for_list_commands
+network front-door waf-policy managed-rules override:
+  rule_exclusions:
+  - require_wait_command_if_no_wait
+network front-door waf-policy managed-rules override list:
+  rule_exclusions:
+  - no_ids_for_list_commands
+network front-door waf-policy rule:
+  rule_exclusions:
+  - require_wait_command_if_no_wait
+network front-door waf-policy rule list:
+  rule_exclusions:
+  - no_ids_for_list_commands
+network front-door waf-policy rule match-condition:
+  rule_exclusions:
+  - require_wait_command_if_no_wait
+network front-door waf-policy rule match-condition list:
+  rule_exclusions:
+  - no_ids_for_list_commands
 network manager connect-config create:
   parameters:
     delete_existing_peering:
@@ -3382,3 +3595,34 @@ eventgrid namespace topic update:
     event_retention_in_days:
       rule_exclusions:
       - option_length_too_long
+
+confcom containers from_vn2:
+  parameters:
+    template:
+      rule_exclusions:
+        - no_positional_parameters
+
+confcom fragment push:
+  parameters:
+    signed_fragment:
+      rule_exclusions:
+        - no_positional_parameters
+
+confcom fragment attach:
+  parameters:
+    signed_fragment:
+      rule_exclusions:
+        - no_positional_parameters
+
+confcom containers from_image:
+  parameters:
+    image:
+      rule_exclusions:
+        - no_positional_parameters
+
+relationship dependency-of create:
+  rule_exclusions:
+    - missing_command_example
+relationship service-group-member create:
+  rule_exclusions:
+    - missing_command_example

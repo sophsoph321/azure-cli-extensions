@@ -25,7 +25,13 @@ class VmwareScenarioTest(ScenarioTest):
             'cluster': 'pycluster1',
             'hosts': 'fakehost22.nyc1.kubernetes.center fakehost23.nyc1.kubernetes.center fakehost24.nyc1.kubernetes.center',
             'key_vault_key': 'vmwarekey',
-            'vault_url': 'https://keyvault1-kmip-kvault.vault.azure.net/'
+            'vault_url': 'https://keyvault1-kmip-kvault.vault.azure.net/',
+            'clustername': 'cluster1',
+            'hostname': "name",
+            'vcf_cores': '100',
+            'vcf_end_date': '2027-01-01T00:00:00Z',
+            'vcf_broadcom_site_id': 'site123',
+            'vcf_broadcom_contract_number': '12345',
         })
 
         # check quote availability
@@ -39,7 +45,14 @@ class VmwareScenarioTest(ScenarioTest):
 
         # create a private cloud
         self.cmd(
-            'vmware private-cloud create -g {rg} -n {privatecloud} --location {loc} --sku av20 --cluster-size 3 --network-block 192.168.48.0/22 --nsxt-password 5rqdLj4GF3cePUe6( --vcenter-password UpfBXae9ZquZSDXk( --accept-eula')
+            'vmware private-cloud create -g {rg} -n {privatecloud} --location {loc} --sku av20 --cluster-size 3 --network-block 192.168.48.0/22 --accept-eula')
+        
+        self.cmd(
+            'vmware private-cloud create -g {rg} -n {privatecloud} --location {loc} --sku av20 --cluster-size 3 --network-block 192.168.48.0/22 --zones 1 --accept-eula')
+
+        # create a private cloud with a vcf5 license
+        self.cmd(
+            'vmware private-cloud create -g {rg} -n {privatecloud} --location {loc} --sku av36 --cluster-size 3 --network-block 192.168.48.0/22 --vcf-license vcf5.cores={vcf_cores} vcf5.end-date={vcf_end_date} vcf5.site-id={vcf_broadcom_site_id} vcf5.contract-number={vcf_broadcom_contract_number} --accept-eula')
 
         count = len(self.cmd('vmware private-cloud list -g {rg}').get_output_in_json())
         self.assertEqual(count, 1, 'private cloud count expected to be 1')
@@ -68,6 +81,15 @@ class VmwareScenarioTest(ScenarioTest):
 
         # update private cloud to set management cluster hosts
         self.cmd('vmware private-cloud update -g {rg} -n {privatecloud} --vsan-datastore-name test-name')
+
+        # update private cloud to set vcf5 license
+        self.cmd('vmware private-cloud update -g {rg} -n {privatecloud} --vcf-license vcf5.cores={vcf_cores} vcf5.end-date={vcf_end_date} vcf5.site-id={vcf_broadcom_site_id} vcf5.contract-number={vcf_broadcom_contract_number}')
+
+        # get vcf license
+        self.cmd('vmware private-cloud get-vcf-license -g {rg} -n {privatecloud}')
+
+        # delete vcf license
+        self.cmd('vmware private-cloud delete-vcf-license -g {rg} -c {privatecloud} --yes')
 
         # list authorization
         self.cmd('vmware authorization list -g {rg} -c {privatecloud}')
@@ -132,6 +154,16 @@ class VmwareScenarioTest(ScenarioTest):
 
         # cluster list zone
         self.cmd('vmware cluster list-zones -g {rg} -c {privatecloud} -n {cluster}')
+        
+        # list hosts
+        count = len(self.cmd('az vmware cluster host list -g rg --cluster-name {clustername} --private-cloud-name {privatecloud}').get_output_in_json())
+        self.assertEqual(count, 3, 'count expected to be 3')
+
+        # get a host
+        self.cmd('az vmware cluster host show -g rg --cluster-name {clustername} --private-cloud-name {privatecloud} --host-id {hostname}')
 
         # delete the private cloud
         self.cmd('vmware private-cloud delete -g {rg} -n {privatecloud} --yes')
+        
+        # get sku list
+        self.cmd('vmware skus list')

@@ -71,38 +71,6 @@ class AmgScenarioTest(ScenarioTest):
 
 
     @ResourceGroupPreparer(name_prefix='cli_test_amg')
-    def test_amg_api_key_e2e(self, resource_group):
-
-        self.kwargs.update({
-            'name': self.create_random_name(prefix='clitestamgapikey', length=23),
-            'location': 'westcentralus',
-            "key": "apikey1",
-            "key2": "apikey2"
-        })
-
-        owner = self._get_signed_in_user()
-        self.recording_processors.append(MSGraphNameReplacer(owner, MOCKED_USER_NAME))
-
-        with unittest.mock.patch('azext_amg.custom._gen_guid', side_effect=self.create_guid):
-            self.cmd('grafana create -g {rg} -n {name} -l {location}')
-            # Ensure RBAC changes are propagated
-            time.sleep(120)
-            self.cmd('grafana update -g {rg} -n {name} --api-key Enabled')
-            self.cmd('grafana api-key list -g {rg} -n {name}', checks=[
-                self.check('length([])', 0)
-            ])
-            result = self.cmd('grafana api-key create -g {rg} -n {name} --key {key} --role Admin --time-to-live 3d').get_output_in_json()
-            api_key = result["key"]
-            self.cmd('grafana api-key create -g {rg} -n {name} --key {key2}')
-            self.cmd('grafana api-key list -g {rg} -n {name}', checks=[
-                self.check('length([])', 2)
-            ])
-            self.cmd('grafana api-key delete -g {rg} -n {name} --key {key2}')
-            number = len(self.cmd('grafana dashboard list -g {rg} -n {name} --api-key ' + api_key).get_output_in_json())
-            self.assertTrue(number > 0)
-
-
-    @ResourceGroupPreparer(name_prefix='cli_test_amg')
     def test_amg_service_account_e2e(self, resource_group):
 
         self.kwargs.update({
@@ -450,16 +418,16 @@ class AmgScenarioTest(ScenarioTest):
 
             self.cmd('monitor account create -n {monitor_name} -g {rg} -l {location}')
 
-            self.cmd('grafana mpe create -g {rg} --workspace-name {name} -n {mpe_name} -l {location} --group-ids prometheusMetrics --private-link-resource-region {location} --private-link-resource-id /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Monitor/accounts/{monitor_name}', checks=[
+            self.cmd('grafana managed-private-endpoint create -g {rg} --workspace-name {name} -n {mpe_name} -l {location} --group-ids prometheusMetrics --private-link-resource-region {location} --private-link-resource-id /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Monitor/accounts/{monitor_name}', checks=[
                 self.check('name', '{mpe_name}'),
                 self.check('connectionState.status', 'Pending')
             ])
 
-            self.cmd('grafana mpe list -g {rg} --workspace-name {name}', checks=[
+            self.cmd('grafana managed-private-endpoint list -g {rg} --workspace-name {name}', checks=[
                 self.check('length([])', 1)
             ])
 
-            self.cmd('grafana mpe show -g {rg} --workspace-name {name} -n {mpe_name}', checks=[
+            self.cmd('grafana managed-private-endpoint show -g {rg} --workspace-name {name} -n {mpe_name}', checks=[
                 self.check('name', '{mpe_name}')
             ])
 
@@ -473,19 +441,19 @@ class AmgScenarioTest(ScenarioTest):
 
             self.cmd('network private-endpoint-connection approve --id {mpe_id} -d "Approved" ')
 
-            self.cmd('grafana mpe show -g {rg} --workspace-name {name} -n {mpe_name}', checks=[
+            self.cmd('grafana managed-private-endpoint show -g {rg} --workspace-name {name} -n {mpe_name}', checks=[
                 self.check('connectionState.status', 'Pending')
             ])
 
-            self.cmd('grafana mpe refresh -g {rg} --workspace-name {name}')
+            self.cmd('grafana managed-private-endpoint refresh -g {rg} --workspace-name {name}')
 
-            self.cmd('grafana mpe show -g {rg} --workspace-name {name} -n {mpe_name}', checks=[
+            self.cmd('grafana managed-private-endpoint show -g {rg} --workspace-name {name} -n {mpe_name}', checks=[
                 self.check('connectionState.status', 'Approved')
             ])
 
-            self.cmd('grafana mpe delete -g {rg} --workspace-name {name} -n {mpe_name} --yes')
+            self.cmd('grafana managed-private-endpoint delete -g {rg} --workspace-name {name} -n {mpe_name} --yes')
 
-            self.cmd('grafana mpe list -g {rg} --workspace-name {name}', checks=[
+            self.cmd('grafana managed-private-endpoint list -g {rg} --workspace-name {name}', checks=[
                 self.check('length([])', 0)
             ])
 
@@ -531,9 +499,9 @@ class AmgScenarioTest(ScenarioTest):
 
             self.cmd('monitor account create -n {monitor_name} -g {rg} -l {location}')
 
-            self.cmd('grafana integrations monitor add -g {rg} -n {name} --monitor-sub-id {sub} --monitor-rg-name {rg} --monitor-name {monitor_name}')
+            self.cmd('grafana integration monitor add -g {rg} -n {name} --monitor-sub-id {sub} --monitor-rg-name {rg} --monitor-name {monitor_name}')
 
-            monitor_integrations = self.cmd('grafana integrations monitor list -g {rg} -n {name}', checks=[
+            monitor_integrations = self.cmd('grafana integration monitor list -g {rg} -n {name}', checks=[
                 self.check('length([])', 1)
             ]).get_output_in_json()
 
@@ -542,9 +510,9 @@ class AmgScenarioTest(ScenarioTest):
             ])
 
             self._poll_for_amg_succeeded_state('{rg}', '{name}', timeout=500)  # Wait for workspace to complete 'Updating' provisioning state
-            self.cmd('grafana integrations monitor delete -g {rg} -n {name} --monitor-sub-id {sub} --monitor-rg-name {rg} --monitor-name {monitor_name}')
+            self.cmd('grafana integration monitor delete -g {rg} -n {name} --monitor-sub-id {sub} --monitor-rg-name {rg} --monitor-name {monitor_name}')
 
-            self.cmd('grafana integrations monitor list -g {rg} -n {name}', checks=[
+            self.cmd('grafana integration monitor list -g {rg} -n {name}', checks=[
                 self.check('length([])', 0)
             ])
 

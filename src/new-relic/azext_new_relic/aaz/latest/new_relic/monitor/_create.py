@@ -15,7 +15,7 @@ from azure.cli.core.aaz import *
     "new-relic monitor create",
 )
 class Create(AAZCommand):
-    """Create a NewRelicMonitorResource
+    """Creates a new New Relic monitor resource in your Azure subscription. This sets up the integration between Azure and your New Relic account, enabling observability and monitoring of your Azure resources through New Relic.
 
     :example: Create a NewRelicMonitorResource.
         az new-relic monitor create --resource-group MyResourceGroup --name MyNewRelicMonitor --location eastus2euap --user-info first-name="vdftzcggiref" last-name="bcsztgqovdlmzf" email-address="UserEmail@123.com" phone-number="123456" --plan-data billing-cycle="MONTHLY" effective-date='2022-10-25T15:14:33+02:00' plan-details="newrelic-pay-as-you-go-free-live@TIDgmz7xq9ge3py@PUBIDnewrelicinc1635200720692.newrelic_liftr_payg" usage-type="PAYG" --account-creation-source "LIFTR" --org-creation-source "LIFTR" --tags key6976=oaxfhf
@@ -176,7 +176,7 @@ class Create(AAZCommand):
             options=["email-address"],
             help="User Email",
             fmt=AAZStrArgFormat(
-                pattern="^[A-Za-z0-9._%+-]+@(?:[A-Za-z0-9-]+\.)+[A-Za-z]{2,}$",
+                pattern="^[A-Za-z0-9._%+-]+@(?:[A-Za-z0-9-]+\\.)+[A-Za-z]{2,}$",
             ),
         )
         user_info.first_name = AAZStrArg(
@@ -208,6 +208,7 @@ class Create(AAZCommand):
             options=["--identity"],
             arg_group="Resource",
             help="The managed service identities assigned to this resource. Support shorthand-syntax, json-file and yaml-file. Try \"??\" to show more.",
+            default={"type": "SystemAssigned"},
         )
         _args_schema.location = AAZResourceLocationArg(
             arg_group="Resource",

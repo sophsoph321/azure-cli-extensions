@@ -13,17 +13,19 @@ from azure.cli.core.aaz import *
 
 @register_command(
     "storage account task-assignment delete",
-    is_preview=True,
     confirmation="Are you sure you want to perform this operation?",
 )
 class Delete(AAZCommand):
     """Delete the storage task assignment sub-resource
+
+    :example: Delete Storage TaskAssignment
+        az storage account task-assignment delete --resource-group res4228 --account-name sto4445 --storage-task-assignment-name myassignment1
     """
 
     _aaz_info = {
-        "version": "2023-05-01",
+        "version": "2025-08-01",
         "resources": [
-            ["mgmt-plane", "/subscriptions/{}/resourcegroups/{}/providers/microsoft.storage/storageaccounts/{}/storagetaskassignments/{}", "2023-05-01"],
+            ["mgmt-plane", "/subscriptions/{}/resourcegroups/{}/providers/microsoft.storage/storageaccounts/{}/storagetaskassignments/{}", "2025-08-01"],
         ]
     }
 
@@ -64,7 +66,7 @@ class Delete(AAZCommand):
             required=True,
             id_part="child_name_1",
             fmt=AAZStrArgFormat(
-                pattern="^[a-z0-9]{3,24}$",
+                pattern="^[a-z][a-z0-9]{2,23}$",
                 max_length=24,
                 min_length=3,
             ),
@@ -133,7 +135,7 @@ class Delete(AAZCommand):
 
         @property
         def error_format(self):
-            return "MgmtErrorFormat"
+            return "ODataV4Format"
 
         @property
         def url_parameters(self):
@@ -161,7 +163,7 @@ class Delete(AAZCommand):
         def query_parameters(self):
             parameters = {
                 **self.serialize_query_param(
-                    "api-version", "2023-05-01",
+                    "api-version", "2025-08-01",
                     required=True,
                 ),
             }

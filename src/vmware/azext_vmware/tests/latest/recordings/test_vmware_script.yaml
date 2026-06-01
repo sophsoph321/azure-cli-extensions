@@ -13,28 +13,22 @@ interactions:
       ParameterSetName:
       - -g -c
       User-Agent:
-      - AZURECLI/2.68.0 azsdk-python-core/1.31.0 Python/3.12.9 (Windows-11-10.0.26100-SP0)
+      - AZURECLI/2.82.0 azsdk-python-core/1.37.0 Python/3.10.11 (Windows-10-10.0.26200-SP0)
     method: GET
-    uri: https://localhost/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/cli_test_vmware_script000001/providers/Microsoft.AVS/privateClouds/cloud1/scriptPackages?api-version=2023-09-01
+    uri: https://localhost/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/cli_test_vmware_script000001/providers/Microsoft.AVS/privateClouds/cloud1/scriptPackages?api-version=2025-09-01
   response:
     body:
       string: '{"value":[{"id":"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/group1/providers/Microsoft.AVS/privateClouds/cloud1/scriptPackages/Microsoft.AVS.Management@3.0.48","name":"Microsoft.AVS.Management@3.0.48","type":"Microsoft.AVS/privateClouds/scriptPackages","properties":{"description":"Various
-        cmdlets for elevated access to Private Cloud administrative functions","version":"3.0.48","company":"Microsoft","uri":"https://microsoft.com"}},{}]}'
+        cmdlets for elevated access to Private Cloud administrative functions","version":"3.0.48","company":"Microsoft","uri":"https://microsoft.com"}},{"id":"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/group1/providers/Microsoft.AVS/privateClouds/cloud1/scriptPackages/JSDR.Configuration@1.0.0","name":"JSDR.Configuration@1.0.0","type":"Microsoft.AVS/privateClouds/scriptPackages","properties":{"description":"Various
+        cmdlets by Jetstream for Private Cloud administration","version":"1.0.0","company":"Jetstream
+        Software","uri":"https://www.jetstreamsoft.com/about/support/"}}]}'
     headers:
-      access-control-allow-credentials:
-      - 'true'
-      access-control-allow-headers:
-      - '*'
-      access-control-allow-methods:
-      - PUT, GET, HEAD, POST, DELETE, PATCH, OPTIONS
-      access-control-allow-origin:
-      - '*'
       content-length:
       - '908'
       content-type:
       - application/json
       date:
-      - Thu, 13 Mar 2025 01:49:51 GMT
+      - Fri, 16 Jan 2026 17:42:38 GMT
       server:
       - Rocket
     status:
@@ -54,28 +48,20 @@ interactions:
       ParameterSetName:
       - -g -c -n
       User-Agent:
-      - AZURECLI/2.68.0 azsdk-python-core/1.31.0 Python/3.12.9 (Windows-11-10.0.26100-SP0)
+      - AZURECLI/2.82.0 azsdk-python-core/1.37.0 Python/3.10.11 (Windows-10-10.0.26200-SP0)
     method: GET
-    uri: https://localhost/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/cli_test_vmware_script000001/providers/Microsoft.AVS/privateClouds/cloud1/scriptPackages/Microsoft.AVS.Management%403.0.48?api-version=2023-09-01
+    uri: https://localhost/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/cli_test_vmware_script000001/providers/Microsoft.AVS/privateClouds/cloud1/scriptPackages/Microsoft.AVS.Management%403.0.48?api-version=2025-09-01
   response:
     body:
       string: '{"id":"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/group1/providers/Microsoft.AVS/privateClouds/cloud1/scriptPackages/Microsoft.AVS.Management@3.0.48","name":"Microsoft.AVS.Management@3.0.48","type":"Microsoft.AVS/privateClouds/scriptPackages","properties":{"description":"Various
         cmdlets for elevated access to Private Cloud administrative functions","version":"3.0.48","company":"Microsoft","uri":"https://microsoft.com"}}'
     headers:
-      access-control-allow-credentials:
-      - 'true'
-      access-control-allow-headers:
-      - '*'
-      access-control-allow-methods:
-      - PUT, GET, HEAD, POST, DELETE, PATCH, OPTIONS
-      access-control-allow-origin:
-      - '*'
       content-length:
       - '447'
       content-type:
       - application/json
       date:
-      - Thu, 13 Mar 2025 01:49:52 GMT
+      - Fri, 16 Jan 2026 17:42:41 GMT
       server:
       - Rocket
     status:
@@ -95,9 +81,9 @@ interactions:
       ParameterSetName:
       - -g -c -p
       User-Agent:
-      - AZURECLI/2.68.0 azsdk-python-core/1.31.0 Python/3.12.9 (Windows-11-10.0.26100-SP0)
+      - AZURECLI/2.82.0 azsdk-python-core/1.37.0 Python/3.10.11 (Windows-10-10.0.26200-SP0)
     method: GET
-    uri: https://localhost/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/cli_test_vmware_script000001/providers/Microsoft.AVS/privateClouds/cloud1/scriptPackages/Microsoft.AVS.Management%403.0.48/scriptCmdlets?api-version=2023-09-01
+    uri: https://localhost/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/cli_test_vmware_script000001/providers/Microsoft.AVS/privateClouds/cloud1/scriptPackages/Microsoft.AVS.Management%403.0.48/scriptCmdlets?api-version=2025-09-01
   response:
     body:
       string: '{"value":[{"id":"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/group1/providers/Microsoft.AVS/privateClouds/cloud1/scriptPackages/package@1.0.2/scriptCmdlets/Set-AvsStoragePolicy","name":"Set-AvsStoragePolicy","type":"Microsoft.AVS/privateClouds/scriptPackages/scriptCmdlets","properties":{"description":"Allow
@@ -109,20 +95,12 @@ interactions:
         User DN of the Server","visibility":"Visible","optional":"Required"},{"type":"SecureString","name":"Password","description":"Password
         for authenticating to the server","visibility":"Hidden","optional":"Required"}]}}]}'
     headers:
-      access-control-allow-credentials:
-      - 'true'
-      access-control-allow-headers:
-      - '*'
-      access-control-allow-methods:
-      - PUT, GET, HEAD, POST, DELETE, PATCH, OPTIONS
-      access-control-allow-origin:
-      - '*'
       content-length:
       - '1530'
       content-type:
       - application/json
       date:
-      - Thu, 13 Mar 2025 01:49:55 GMT
+      - Fri, 16 Jan 2026 17:42:43 GMT
       server:
       - Rocket
     status:
@@ -142,9 +120,9 @@ interactions:
       ParameterSetName:
       - -g -c -p -n
       User-Agent:
-      - AZURECLI/2.68.0 azsdk-python-core/1.31.0 Python/3.12.9 (Windows-11-10.0.26100-SP0)
+      - AZURECLI/2.82.0 azsdk-python-core/1.37.0 Python/3.10.11 (Windows-10-10.0.26200-SP0)
     method: GET
-    uri: https://localhost/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/cli_test_vmware_script000001/providers/Microsoft.AVS/privateClouds/cloud1/scriptPackages/Microsoft.AVS.Management%403.0.48/scriptCmdlets/New-ExternalSsoDomain?api-version=2023-09-01
+    uri: https://localhost/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/cli_test_vmware_script000001/providers/Microsoft.AVS/privateClouds/cloud1/scriptPackages/Microsoft.AVS.Management%403.0.48/scriptCmdlets/New-ExternalSsoDomain?api-version=2025-09-01
   response:
     body:
       string: '{"id":"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/group1/providers/Microsoft.AVS/privateClouds/{privateCloudName}/scriptPackages/package@1.0.2/scriptCmdlets/New-ExternalSsoDomain","name":"New-ExternalSsoDomain","type":"Microsoft.AVS/privateClouds/scriptPackages/scriptCmdlets","properties":{"description":"Add
@@ -153,20 +131,12 @@ interactions:
         User DN of the Server","visibility":"Visible","optional":"Required"},{"type":"SecureString","name":"Password","description":"Password
         for authenticating to the server","visibility":"Hidden","optional":"Required"}]}}'
     headers:
-      access-control-allow-credentials:
-      - 'true'
-      access-control-allow-headers:
-      - '*'
-      access-control-allow-methods:
-      - PUT, GET, HEAD, POST, DELETE, PATCH, OPTIONS
-      access-control-allow-origin:
-      - '*'
       content-length:
       - '831'
       content-type:
       - application/json
       date:
-      - Thu, 13 Mar 2025 01:49:57 GMT
+      - Fri, 16 Jan 2026 17:42:45 GMT
       server:
       - Rocket
     status:
@@ -196,9 +166,9 @@ interactions:
       - --resource-group --private-cloud --name --script-cmdlet-id --timeout --retention
         --parameter --parameter --hidden-parameter
       User-Agent:
-      - AZURECLI/2.68.0 azsdk-python-core/1.31.0 Python/3.12.9 (Windows-11-10.0.26100-SP0)
+      - AZURECLI/2.82.0 azsdk-python-core/1.37.0 Python/3.10.11 (Windows-10-10.0.26200-SP0)
     method: PUT
-    uri: https://localhost/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/cli_test_vmware_script000001/providers/Microsoft.AVS/privateClouds/cloud1/scriptExecutions/addSsoServer?api-version=2023-09-01
+    uri: https://localhost/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/cli_test_vmware_script000001/providers/Microsoft.AVS/privateClouds/cloud1/scriptExecutions/addSsoServer?api-version=2025-09-01
   response:
     body:
       string: '{"id":"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/group1/providers/Microsoft.AVS/privateClouds/cloud1/scriptExecutions/addSsoServer","name":"addSsoServer","type":"Microsoft.AVS/privateClouds/scriptExecutions","properties":{"scriptCmdletId":"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/group1/providers/Microsoft.AVS/privateClouds/cloud1/scriptPackages/AVS.PowerCommands@1.0.0/scriptCmdlets/New-SsoExternalIdentitySource","parameters":[{"type":"Value","name":"DomainName","value":"placeholderDomain.local"},{"type":"Value","name":"BaseUserDN","value":"DC=placeholder,
@@ -206,20 +176,12 @@ interactions:
         server","timeout":"P0Y0M0DT0H60M60S","retention":"P0Y0M60DT0H60M60S","submittedAt":null,"startedAt":null,"finishedAt":null,"provisioningState":"Succeeded","output":["IdentitySource:
         placeholder.dc","BaseDN=''dc=placeholder, dc=local"]}}'
     headers:
-      access-control-allow-credentials:
-      - 'true'
-      access-control-allow-headers:
-      - '*'
-      access-control-allow-methods:
-      - PUT, GET, HEAD, POST, DELETE, PATCH, OPTIONS
-      access-control-allow-origin:
-      - '*'
       content-length:
       - '926'
       content-type:
       - application/json
       date:
-      - Thu, 13 Mar 2025 01:49:59 GMT
+      - Fri, 16 Jan 2026 17:42:47 GMT
       server:
       - Rocket
     status:
@@ -239,29 +201,21 @@ interactions:
       ParameterSetName:
       - -g -c
       User-Agent:
-      - AZURECLI/2.68.0 azsdk-python-core/1.31.0 Python/3.12.9 (Windows-11-10.0.26100-SP0)
+      - AZURECLI/2.82.0 azsdk-python-core/1.37.0 Python/3.10.11 (Windows-10-10.0.26200-SP0)
     method: GET
-    uri: https://localhost/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/cli_test_vmware_script000001/providers/Microsoft.AVS/privateClouds/cloud1/scriptExecutions?api-version=2023-09-01
+    uri: https://localhost/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/cli_test_vmware_script000001/providers/Microsoft.AVS/privateClouds/cloud1/scriptExecutions?api-version=2025-09-01
   response:
     body:
       string: '{"value":[{"id":"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/group1/providers/Microsoft.AVS/privateClouds/cloud1/scriptExecutions/addSsoServer","name":"addSsoServer","type":"Microsoft.AVS/privateClouds/scriptExecutions","properties":{"scriptCmdletId":"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/group1/providers/Microsoft.AVS/privateClouds/cloud1/scriptPackages/AVS:1.0.0/scriptCmdlets/New-SsoExternalIdentitySource","parameters":[{"type":"Value","name":"DomainName","value":"placeholderDomain.local"},{"type":"Value","name":"BaseUserDN","value":"DC=placeholder,
         DC=placeholder"}],"failureReason":"vCenter failed to connect to the external
         server","timeout":"P0Y0M0DT0H60M60S","retention":"P0Y0M60DT0H60M60S","submittedAt":"2021-03-21T17:31:28Z","startedAt":"2021-03-21T17:32:28Z","finishedAt":"2021-03-21T18:32:28Z","provisioningState":"Failed"}}]}'
     headers:
-      access-control-allow-credentials:
-      - 'true'
-      access-control-allow-headers:
-      - '*'
-      access-control-allow-methods:
-      - PUT, GET, HEAD, POST, DELETE, PATCH, OPTIONS
-      access-control-allow-origin:
-      - '*'
       content-length:
       - '896'
       content-type:
       - application/json
       date:
-      - Thu, 13 Mar 2025 01:50:02 GMT
+      - Fri, 16 Jan 2026 17:42:50 GMT
       server:
       - Rocket
     status:
@@ -281,29 +235,21 @@ interactions:
       ParameterSetName:
       - -g -c -n
       User-Agent:
-      - AZURECLI/2.68.0 azsdk-python-core/1.31.0 Python/3.12.9 (Windows-11-10.0.26100-SP0)
+      - AZURECLI/2.82.0 azsdk-python-core/1.37.0 Python/3.10.11 (Windows-10-10.0.26200-SP0)
     method: GET
-    uri: https://localhost/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/cli_test_vmware_script000001/providers/Microsoft.AVS/privateClouds/cloud1/scriptExecutions/addSsoServer?api-version=2023-09-01
+    uri: https://localhost/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/cli_test_vmware_script000001/providers/Microsoft.AVS/privateClouds/cloud1/scriptExecutions/addSsoServer?api-version=2025-09-01
   response:
     body:
       string: '{"id":"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/group1/providers/Microsoft.AVS/privateClouds/cloud1/scriptExecutions/addSsoServer","name":"addSsoServer","type":"Microsoft.AVS/privateClouds/scriptExecutions","properties":{"scriptCmdletId":"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/group1/providers/Microsoft.AVS/privateClouds/cloud1/scriptPackages/AVS.PowerCommands@1.0.0/scriptCmdlets/New-SsoExternalIdentitySource","parameters":[{"type":"Value","name":"DomainName","value":"placeholderDomain.local"},{"type":"Value","name":"BaseUserDN","value":"DC=placeholder,
         DC=placeholder"}],"failureReason":"vCenter failed to connect to the external
         server","timeout":"P0Y0M0DT0H60M60S","retention":"P0Y0M60DT0H60M60S","submittedAt":"2021-03-21T17:31:28Z","startedAt":"2021-03-21T17:32:28Z","finishedAt":"2021-03-21T18:32:28Z","provisioningState":"Succeeded"}}'
     headers:
-      access-control-allow-credentials:
-      - 'true'
-      access-control-allow-headers:
-      - '*'
-      access-control-allow-methods:
-      - PUT, GET, HEAD, POST, DELETE, PATCH, OPTIONS
-      access-control-allow-origin:
-      - '*'
       content-length:
       - '901'
       content-type:
       - application/json
       date:
-      - Thu, 13 Mar 2025 01:50:04 GMT
+      - Fri, 16 Jan 2026 17:42:53 GMT
       server:
       - Rocket
     status:
@@ -325,27 +271,97 @@ interactions:
       ParameterSetName:
       - -g -c -n --yes
       User-Agent:
-      - AZURECLI/2.68.0 azsdk-python-core/1.31.0 Python/3.12.9 (Windows-11-10.0.26100-SP0)
+      - AZURECLI/2.82.0 azsdk-python-core/1.37.0 Python/3.10.11 (Windows-10-10.0.26200-SP0)
     method: DELETE
-    uri: https://localhost/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/cli_test_vmware_script000001/providers/Microsoft.AVS/privateClouds/cloud1/scriptExecutions/addSsoServer?api-version=2023-09-01
+    uri: https://localhost/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/cli_test_vmware_script000001/providers/Microsoft.AVS/privateClouds/cloud1/scriptExecutions/addSsoServer?api-version=2025-09-01
   response:
     body:
       string: ''
     headers:
-      access-control-allow-credentials:
-      - 'true'
-      access-control-allow-headers:
-      - '*'
-      access-control-allow-methods:
-      - PUT, GET, HEAD, POST, DELETE, PATCH, OPTIONS
-      access-control-allow-origin:
-      - '*'
       content-length:
       - '0'
+      date:
+      - Fri, 16 Jan 2026 17:42:55 GMT
+      server:
+      - Rocket
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '["Information", "Warning", "Output", "Error"]'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      CommandName:
+      - vmware script-execution get-execution-log
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '45'
+      Content-Type:
+      - application/json
+      ParameterSetName:
+      - -g --private-cloud-name --script-execution-name
+      User-Agent:
+      - AZURECLI/2.82.0 azsdk-python-core/1.37.0 Python/3.10.11 (Windows-10-10.0.26200-SP0)
+    method: POST
+    uri: https://localhost/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/cli_test_vmware_script000001/providers/Microsoft.AVS/privateClouds/cloud1/scriptExecutions/addSsoServer/getExecutionLogs?api-version=2025-09-01
+  response:
+    body:
+      string: '{"id":"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/group1/providers/Microsoft.AVS/privateClouds/cloud1/scriptExecutions/addSsoServer","name":"addSsoServer","properties":{"timeout":"P0Y0M0D0H060M0S","submittedAt":null,"startedAt":null,"finishedAt":null,"output":["Most
+        recent output","Second most recent output"],"information":["Most recent information
+        output","Second most recent information output"],"warnings":["Most recent
+        warning output","Second most recent warning output"],"errors":["Most recent
+        error output","Second most error recent output"]}}'
+    headers:
+      content-length:
+      - '575'
       content-type:
       - application/json
       date:
-      - Thu, 13 Mar 2025 01:50:07 GMT
+      - Fri, 16 Jan 2026 17:42:58 GMT
+      server:
+      - Rocket
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '["Error", "Information", "Output", "Warning"]'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      CommandName:
+      - vmware script-execution get-execution-log
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '45'
+      Content-Type:
+      - application/json
+      ParameterSetName:
+      - -g --private-cloud-name --script-execution-name --script-output-stream-type
+      User-Agent:
+      - AZURECLI/2.82.0 azsdk-python-core/1.37.0 Python/3.10.11 (Windows-10-10.0.26200-SP0)
+    method: POST
+    uri: https://localhost/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/cli_test_vmware_script000001/providers/Microsoft.AVS/privateClouds/cloud1/scriptExecutions/addSsoServer/getExecutionLogs?api-version=2025-09-01
+  response:
+    body:
+      string: '{"id":"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/group1/providers/Microsoft.AVS/privateClouds/cloud1/scriptExecutions/addSsoServer","name":"addSsoServer","properties":{"timeout":"P0Y0M0D0H060M0S","submittedAt":null,"startedAt":null,"finishedAt":null,"output":["Most
+        recent output","Second most recent output"],"information":["Most recent information
+        output","Second most recent information output"],"warnings":["Most recent
+        warning output","Second most recent warning output"],"errors":["Most recent
+        error output","Second most error recent output"]}}'
+    headers:
+      content-length:
+      - '575'
+      content-type:
+      - application/json
+      date:
+      - Fri, 16 Jan 2026 17:43:00 GMT
       server:
       - Rocket
     status:

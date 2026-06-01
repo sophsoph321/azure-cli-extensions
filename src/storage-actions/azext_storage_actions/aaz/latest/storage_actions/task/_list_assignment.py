@@ -13,7 +13,6 @@ from azure.cli.core.aaz import *
 
 @register_command(
     "storage-actions task list-assignment",
-    is_preview=True,
 )
 class ListAssignment(AAZCommand):
     """List all the storage task assignments available under the given resource group.
@@ -59,7 +58,7 @@ class ListAssignment(AAZCommand):
                 min_length=3,
             ),
         )
-        _args_schema.maxpagesize = AAZStrArg(
+        _args_schema.maxpagesize = AAZIntArg(
             options=["--maxpagesize"],
             help="Optional, specifies the maximum number of storage task assignment Ids to be included in the list response.",
         )
@@ -67,7 +66,7 @@ class ListAssignment(AAZCommand):
 
     def _execute_operations(self):
         self.pre_operations()
-        self.StorageTaskAssignmentList(ctx=self.ctx)()
+        self.StorageTasksList(ctx=self.ctx)()
         self.post_operations()
 
     @register_callback
@@ -83,7 +82,7 @@ class ListAssignment(AAZCommand):
         next_link = self.deserialize_output(self.ctx.vars.instance.next_link)
         return result, next_link
 
-    class StorageTaskAssignmentList(AAZHttpOperation):
+    class StorageTasksList(AAZHttpOperation):
         CLIENT_TYPE = "MgmtClient"
 
         def __call__(self, *args, **kwargs):

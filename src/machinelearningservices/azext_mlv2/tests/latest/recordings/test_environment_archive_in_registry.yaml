@@ -1,0 +1,172 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - application/json, text/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - azureml-cli-v2/2.38.1 azsdk-python-mgmt-machinelearningservices/0.1.0 Python/3.11.9
+        (Windows-10-10.0.26200-SP0)
+    method: GET
+    uri: https://eastus.api.azureml.ms/registrymanagement/v1.0/registries/kchawla-reg/discovery
+  response:
+    body:
+      string: '{"registryId": "fc94ce00-c9bb-4361-8e70-25612d497721", "registryName":
+        "kchawla-reg", "tenantId": "72f988bf-86f1-41af-91ab-2d7cd011db47", "primaryRegion":
+        "eastus2", "regions": ["eastus2", "centraluseuap", "westcentralus", "ukwest"],
+        "subscriptionId": "00000000-0000-0000-0000-000000000000", "resourceGroup":
+        "kchawla-rg", "workspaceName": null, "primaryRegionResourceProviderUri": "https://cert-eastus2.experiments.azureml.net/",
+        "registryFqdns": {"eastus2": {"uri": "https://eastus2.api.azureml.ms"}, "centraluseuap":
+        {"uri": "https://int.api.azureml-test.ms"}, "int": {"uri": "https://int.api.azureml-test.ms"},
+        "westcentralus": {"uri": "https://westcentralus.api.azureml.ms"}, "ukwest":
+        {"uri": "https://ukwest.api.azureml.ms"}}, "intellectualPropertyPublisher":
+        null, "isTradeRestricted": false}'
+    headers:
+      azureml-served-by-cluster:
+      - vienna-eastus-01
+      connection:
+      - keep-alive
+      content-length:
+      - '800'
+      content-type:
+      - application/json; charset=utf-8
+      date:
+      - Tue, 19 May 2026 06:58:49 GMT
+      mise-correlation-id:
+      - 3796b38f-cc63-48e4-954d-4cc4507d20b0
+      request-context:
+      - appId=cid-v1:2d2e8e63-272e-4b3c-8598-4ee570a0e70d
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      transfer-encoding:
+      - chunked
+      vary:
+      - Accept-Encoding
+      x-content-type-options:
+      - nosniff
+      x-ms-response-type:
+      - standard
+      x-request-time:
+      - '0.408'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - azureml-cli-v2/2.38.1 azsdk-python-mgmt-machinelearningservices/0.1.0 Python/3.11.9
+        (Windows-10-10.0.26200-SP0)
+    method: GET
+    uri: https://cert-eastus2.experiments.azureml.net/mferp/managementfrontend/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/000000000000000/providers/Microsoft.MachineLearningServices/registries/kchawla-reg/environments/kchawla-env/versions/1?api-version=0000-00-00
+  response:
+    body:
+      string: '{"id": "azureml://registries/kchawla-reg/environments/kchawla-env/versions/1",
+        "name": "1", "type": "environments", "properties": {"description": "Environment
+        created in kchawla-reg registry.", "tags": {}, "properties": {"azureml.labels":
+        "default,latest,invisibleLatest"}, "isArchived": true, "isAnonymous": false,
+        "environmentType": "UserCreated", "image": "mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:latest",
+        "condaFile": "{\n  \"channels\": [\n    \"conda-forge\"\n  ],\n  \"dependencies\":
+        [\n    \"python=3.10\",\n    \"pip\",\n    {\n      \"pip\": [\n        \"azure-ai-ml\",\n        \"azure-identity\",\n        \"mlflow\",\n        \"scikit-learn\",\n        \"pandas\",\n        \"numpy\"\n      ]\n    }\n  ],\n  \"name\":
+        \"kchawla-env\"\n}", "osType": "Linux", "stage": "Archived", "intellectualProperty":
+        null}, "systemData": {"createdAt": "2026-05-18T17:52:59.2719411+00:00", "createdBy":
+        "Kshitij Chawla", "createdByType": "User", "lastModifiedAt": "2026-05-18T17:52:59.2719411+00:00",
+        "lastModifiedBy": "Kshitij Chawla", "lastModifiedByType": "User"}}'
+    headers:
+      azureml-served-by-cluster:
+      - vienna-eastus2-02
+      connection:
+      - keep-alive
+      content-length:
+      - '1078'
+      content-type:
+      - application/json; charset=utf-8
+      date:
+      - Tue, 19 May 2026 06:58:51 GMT
+      mise-correlation-id:
+      - f5aff430-91f7-4175-bc4f-8c3097ea23d3
+      request-context:
+      - appId=cid-v1:2d2e8e63-272e-4b3c-8598-4ee570a0e70d
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      transfer-encoding:
+      - chunked
+      vary:
+      - Accept-Encoding
+      x-content-type-options:
+      - nosniff
+      x-ms-response-type:
+      - standard
+      x-request-time:
+      - '0.600'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"properties": {"description": "Environment created in kchawla-reg registry.",
+      "properties": {"azureml.labels": "default,latest,invisibleLatest"}, "tags":
+      {}, "isAnonymous": false, "isArchived": true, "condaFile": "{\n  \"channels\":
+      [\n    \"conda-forge\"\n  ],\n  \"dependencies\": [\n    \"python=3.10\",\n    \"pip\",\n    {\n      \"pip\":
+      [\n        \"azure-ai-ml\",\n        \"azure-identity\",\n        \"mlflow\",\n        \"scikit-learn\",\n        \"pandas\",\n        \"numpy\"\n      ]\n    }\n  ],\n  \"name\":
+      \"kchawla-env\"\n}", "image": "mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:latest",
+      "osType": "Linux"}}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '635'
+      Content-Type:
+      - application/json
+      User-Agent:
+      - azureml-cli-v2/2.38.1 azsdk-python-mgmt-machinelearningservices/0.1.0 Python/3.11.9
+        (Windows-10-10.0.26200-SP0)
+    method: PUT
+    uri: https://cert-eastus2.experiments.azureml.net/mferp/managementfrontend/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/000000000000000/providers/Microsoft.MachineLearningServices/registries/kchawla-reg/environments/kchawla-env/versions/1?api-version=0000-00-00
+  response:
+    body:
+      string: 'null'
+    headers:
+      azureml-served-by-cluster:
+      - vienna-eastus2-01
+      connection:
+      - keep-alive
+      content-length:
+      - '4'
+      content-type:
+      - application/json; charset=utf-8
+      date:
+      - Tue, 19 May 2026 06:58:52 GMT
+      location:
+      - https://eastus2.api.azureml.ms/environment/v1.0/operations/kchawla-reg_kchawla-env_1_2c1fde67-ab6a-442a-b634-0ab237a166c0
+      mise-correlation-id:
+      - b6536b8a-c6ad-4910-a0d1-5e828313204b
+      request-context:
+      - appId=cid-v1:2d2e8e63-272e-4b3c-8598-4ee570a0e70d
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-content-type-options:
+      - nosniff
+      x-ms-async-operation-timeout:
+      - PT1H
+      x-ms-response-type:
+      - standard
+      x-request-time:
+      - '1.108'
+    status:
+      code: 202
+      message: Accepted
+version: 1

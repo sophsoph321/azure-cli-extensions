@@ -1,0 +1,108 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - application/json, text/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - azureml-cli-v2/2.38.1 azsdk-python-mgmt-machinelearningservices/0.1.0 Python/3.11.9
+        (Windows-10-10.0.26200-SP0)
+    method: GET
+    uri: https://eastus.api.azureml.ms/registrymanagement/v1.0/registries/dsvm-test/discovery
+  response:
+    body:
+      string: '{"registryId": "93595ad9-6099-4324-a067-a21a6c3fa6ba", "registryName":
+        "dsvm-test", "tenantId": "72f988bf-86f1-41af-91ab-2d7cd011db47", "primaryRegion":
+        "eastus", "regions": ["eastus"], "subscriptionId": "00000000-0000-0000-0000-000000000000",
+        "resourceGroup": "testrg", "workspaceName": null, "primaryRegionResourceProviderUri":
+        "https://cert-eastus.experiments.azureml.net/", "registryFqdns": {"eastus":
+        {"uri": "https://eastus.api.azureml.ms"}}, "intellectualPropertyPublisher":
+        null, "isTradeRestricted": false}'
+    headers:
+      azureml-served-by-cluster:
+      - vienna-eastus-01
+      connection:
+      - keep-alive
+      content-length:
+      - '515'
+      content-type:
+      - application/json; charset=utf-8
+      date:
+      - Tue, 19 May 2026 06:41:54 GMT
+      mise-correlation-id:
+      - 314e2496-742b-498e-83b5-21cc590b4e35
+      request-context:
+      - appId=cid-v1:2d2e8e63-272e-4b3c-8598-4ee570a0e70d
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      transfer-encoding:
+      - chunked
+      vary:
+      - Accept-Encoding
+      x-content-type-options:
+      - nosniff
+      x-ms-response-type:
+      - standard
+      x-request-time:
+      - '0.026'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - azureml-cli-v2/2.38.1 azsdk-python-mgmt-machinelearningservices/0.1.0 Python/3.11.9
+        (Windows-10-10.0.26200-SP0)
+    method: GET
+    uri: https://cert-eastus.experiments.azureml.net/mferp/managementfrontend/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/000000000000000/providers/Microsoft.MachineLearningServices/registries/dsvm-test/components?api-version=0000-00-00
+  response:
+    body:
+      string: '{"value": [{"id": "azureml://registries/dsvm-test/components/helloworld_component_with_env",
+        "name": "helloworld_component_with_env", "type": "Microsoft.MachineLearningServices/registries/components",
+        "properties": {"description": "", "tags": {}, "properties": {}, "isArchived":
+        false, "latestVersion": null, "nextVersion": "2026-05-19-06-41-55-4222753"},
+        "systemData": {"createdAt": "2026-05-19T05:32:37.9538001+00:00", "createdBy":
+        "Lava Kumar Repala", "createdByType": "User", "lastModifiedAt": "2026-05-19T06:23:48.515513+00:00",
+        "lastModifiedBy": "Lava Kumar Repala", "lastModifiedByType": "User"}}]}'
+    headers:
+      azureml-served-by-cluster:
+      - vienna-eastus-01
+      connection:
+      - keep-alive
+      content-length:
+      - '605'
+      content-type:
+      - application/json; charset=utf-8
+      date:
+      - Tue, 19 May 2026 06:41:55 GMT
+      mise-correlation-id:
+      - 09d42bd7-0634-45c6-af97-63d32ee8d7aa
+      request-context:
+      - appId=cid-v1:2d2e8e63-272e-4b3c-8598-4ee570a0e70d
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      transfer-encoding:
+      - chunked
+      vary:
+      - Accept-Encoding
+      x-content-type-options:
+      - nosniff
+      x-ms-response-type:
+      - standard
+      x-request-time:
+      - '0.252'
+    status:
+      code: 200
+      message: OK
+version: 1

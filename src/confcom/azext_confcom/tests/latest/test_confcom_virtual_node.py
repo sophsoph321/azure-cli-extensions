@@ -4,6 +4,8 @@
 # --------------------------------------------------------------------------------------------
 
 import os
+from pathlib import Path
+import tempfile
 import unittest
 import json
 import subprocess
@@ -11,7 +13,7 @@ import azext_confcom.config as config
 import azext_confcom.os_util as os_util
 from azext_confcom.template_util import extract_containers_from_text
 from azext_confcom.security_policy import (
-    load_policy_from_str,
+    load_policy_from_json,
     load_policy_from_virtual_node_yaml_str,
     OutputType,
     decompose_confidential_properties
@@ -22,6 +24,7 @@ from azext_confcom.custom import (
 )
 
 TEST_DIR = os.path.abspath(os.path.join(os.path.abspath(__file__), ".."))
+SAMPLES_DIR = os.path.abspath(os.path.join(TEST_DIR, "..", "..", "..", "samples"))
 
 
 class PolicyGeneratingVirtualNode(unittest.TestCase):
@@ -33,7 +36,7 @@ class PolicyGeneratingVirtualNode(unittest.TestCase):
             "containers": [
                 {
                     "name": "simple-container",
-                    "containerImage": "mcr.microsoft.com/cbl-mariner/distroless/python:3.9-nonroot",
+                    "containerImage": "mcr.microsoft.com/azurelinux/base/python:3.12",
                     "environmentVariables": [
                         {
                             "name":"PATH",
@@ -68,7 +71,7 @@ class PolicyGeneratingVirtualNode(unittest.TestCase):
     {
       "name": "simple-container",
       "properties": {
-        "image": "mcr.microsoft.com/cbl-mariner/distroless/python:3.9-nonroot",
+        "image": "mcr.microsoft.com/azurelinux/base/python:3.12",
         "environmentVariables": [
           {
             "name": "PATH",
@@ -106,7 +109,7 @@ metadata:
 spec:
   containers:
   - name: simple-container
-    image: mcr.microsoft.com/cbl-mariner/distroless/python:3.9-nonroot
+    image: mcr.microsoft.com/azurelinux/base/python:3.12
     command: ["python3"]
     env:
     - name: PATH
@@ -138,7 +141,7 @@ metadata:
 spec:
   containers:
     - name: simple-container
-      image: mcr.microsoft.com/cbl-mariner/distroless/python:3.9-nonroot
+      image: mcr.microsoft.com/azurelinux/base/python:3.12
       command:
         - python3
       env:
@@ -201,7 +204,7 @@ metadata:
 spec:
   containers:
     - name: simple-container
-      image: mcr.microsoft.com/cbl-mariner/distroless/python:3.9-nonroot
+      image: mcr.microsoft.com/azurelinux/base/python:3.12
       command:
         - python3
       env:
@@ -267,7 +270,7 @@ metadata:
 spec:
   initContainers:
     - name: init-container
-      image: mcr.microsoft.com/cbl-mariner/distroless/minimal:2.0
+      image: mcr.microsoft.com/azurelinux/distroless/base:3.0
       command:
         - echo "hello world!"
       env:
@@ -275,7 +278,7 @@ spec:
           value: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
   containers:
     - name: simple-container
-      image: mcr.microsoft.com/cbl-mariner/distroless/python:3.9-nonroot
+      image: mcr.microsoft.com/azurelinux/base/python:3.12
       command:
         - python3
 """
@@ -298,7 +301,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: mcr.microsoft.com/cbl-mariner/distroless/minimal:2.0
+        image: mcr.microsoft.com/azurelinux/distroless/base:3.0
         ports:
         - containerPort: 80
           name: web
@@ -338,17 +341,19 @@ spec:
         ports:
         - containerPort: 80
           name: web
-"""
+    """
     @classmethod
     def setUpClass(cls):
-        cls.key_dir_parent = os.path.join(TEST_DIR, '..', '..', '..', 'samples', 'certs')
+        cls.key_dir_parent = Path(tempfile.gettempdir(), "certchain")
+        cls.key_dir_parent.mkdir(parents=True, exist_ok=True)
         cls.key = os.path.join(cls.key_dir_parent, 'intermediateCA', 'private', 'ec_p384_private.pem')
         cls.chain = os.path.join(cls.key_dir_parent, 'intermediateCA', 'certs', 'www.contoso.com.chain.cert.pem')
         if not os.path.exists(cls.key) or not os.path.exists(cls.chain):
-            script_path = os.path.join(cls.key_dir_parent, 'create_certchain.sh')
+            script_path = os.path.join(SAMPLES_DIR, "certs", 'create_certchain.sh')
 
             arg_list = [
                 script_path,
+                cls.key_dir_parent.as_posix(),
             ]
             os.chmod(script_path, 0o755)
 
@@ -356,8 +361,7 @@ spec:
             item = subprocess.run(
                 arg_list,
                 check=False,
-                shell=True,
-                cwd=cls.key_dir_parent,
+                shell=False,
                 env=os.environ.copy(),
             )
 
@@ -365,7 +369,7 @@ spec:
                 raise Exception("Error creating certificate chain")
 
     def test_compare_policy_sources(self):
-        custom_policy = load_policy_from_str(self.custom_json)
+        custom_policy = load_policy_from_json(self.custom_json)
         custom_policy.populate_policy_content_for_all_images()
         virtual_node_policy = load_policy_from_virtual_node_yaml_str(self.custom_yaml)[0]
         virtual_node_policy.populate_policy_content_for_all_images()
@@ -383,17 +387,18 @@ spec:
 
 
     def test_virtual_node_policy_fragments(self):
+        fragment_filename = "policy_file.json"
+        yaml_filename = "policy_file.yaml"
+        rego_filename = "example_file"
+        import_filename = "my_fragments.json"
+        signed_file_path = f"{rego_filename}.rego.cose"
         try:
-          fragment_filename = "policy_file.json"
-          yaml_filename = "policy_file.yaml"
+
           os_util.write_str_to_file(fragment_filename, self.custom_json2)
           os_util.write_str_to_file(yaml_filename, self.custom_yaml)
-          rego_filename = "example_file"
           acifragmentgen_confcom(None, fragment_filename, None, rego_filename, "1", "test_feed_file", self.key, self.chain, None)
 
           # create import file
-          import_filename = "my_fragments.json"
-          signed_file_path = f"{rego_filename}.rego.cose"
           acifragmentgen_confcom(None, None, None, None, None, None, None, None, "1", fragment_path=signed_file_path, generate_import=True, fragments_json=import_filename)
           # add path into the fragment import
           import_data = os_util.load_json_from_file(import_filename)
@@ -426,12 +431,7 @@ spec:
               if container.get(config.POLICY_FIELD_CONTAINERS_NAME) == "simple-container":
                   self.fail("policy contains container covered by fragment")
         finally:
-
-          os_util.force_delete_silently(fragment_filename)
-          os_util.force_delete_silently(yaml_filename)
-          os_util.force_delete_silently(import_filename)
-          os_util.force_delete_silently(signed_file_path)
-          os_util.force_delete_silently(f"{rego_filename}.rego")
+          os_util.force_delete_silently([fragment_filename, yaml_filename, import_filename, signed_file_path, f"{rego_filename}.rego"])
 
 
     def test_configmaps(self):

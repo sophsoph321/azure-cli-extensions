@@ -15,8 +15,8 @@ from azure.cli.core.aaz import *
     "new-relic monitor monitored-subscription update",
 )
 class Update(AAZCommand):
-    """Update the subscriptions that should be monitored by the NewRelic monitor resource.
-    
+    """Update subscriptions to be monitored by the New Relic monitor resource, ensuring optimal observability and performance.
+
     :example: Update the subscriptions that should be monitored by the NewRelic monitor resource.
     Please run below commands in the mentioned order
     1) az new-relic monitor monitored-subscription update --resource-group MyResourceGroup --monitor-name MyNewRelicMonitor --configuration-name default --patch-operation AddBegin --subscriptions "[{status:'InProgress',subscription-id:'subscription-id'}]"
@@ -179,7 +179,7 @@ class Update(AAZCommand):
             help="User Email",
             nullable=True,
             fmt=AAZStrArgFormat(
-                pattern="^[A-Za-z0-9._%+-]+@(?:[A-Za-z0-9-]+\.)+[A-Za-z]{2,}$",
+                pattern="^[A-Za-z0-9._%+-]+@(?:[A-Za-z0-9-]+\\.)+[A-Za-z]{2,}$",
             ),
         )
 

@@ -13,16 +13,18 @@ from azure.cli.core.aaz import *
 
 @register_command(
     "storage account task-assignment show",
-    is_preview=True,
 )
 class Show(AAZCommand):
     """Get the storage task assignment properties
+
+    :example: Get Storage TaskAssignment
+        az storage account task-assignment show -g rg_name -n task_assignment_name --account-name storage_account_name
     """
 
     _aaz_info = {
-        "version": "2023-05-01",
+        "version": "2025-08-01",
         "resources": [
-            ["mgmt-plane", "/subscriptions/{}/resourcegroups/{}/providers/microsoft.storage/storageaccounts/{}/storagetaskassignments/{}", "2023-05-01"],
+            ["mgmt-plane", "/subscriptions/{}/resourcegroups/{}/providers/microsoft.storage/storageaccounts/{}/storagetaskassignments/{}", "2025-08-01"],
         ]
     }
 
@@ -62,7 +64,7 @@ class Show(AAZCommand):
             required=True,
             id_part="child_name_1",
             fmt=AAZStrArgFormat(
-                pattern="^[a-z0-9]{3,24}$",
+                pattern="^[a-z][a-z0-9]{2,23}$",
                 max_length=24,
                 min_length=3,
             ),
@@ -110,7 +112,7 @@ class Show(AAZCommand):
 
         @property
         def error_format(self):
-            return "MgmtErrorFormat"
+            return "ODataV4Format"
 
         @property
         def url_parameters(self):
@@ -138,7 +140,7 @@ class Show(AAZCommand):
         def query_parameters(self):
             parameters = {
                 **self.serialize_query_param(
-                    "api-version", "2023-05-01",
+                    "api-version", "2025-08-01",
                     required=True,
                 ),
             }
@@ -177,8 +179,10 @@ class Show(AAZCommand):
             _schema_on_200.name = AAZStrType(
                 flags={"read_only": True},
             )
-            _schema_on_200.properties = AAZObjectType(
-                flags={"required": True},
+            _schema_on_200.properties = AAZObjectType()
+            _schema_on_200.system_data = AAZObjectType(
+                serialized_name="systemData",
+                flags={"read_only": True},
             )
             _schema_on_200.type = AAZStrType(
                 flags={"read_only": True},
@@ -312,6 +316,26 @@ class Show(AAZCommand):
             run_status.task_version = AAZStrType(
                 serialized_name="taskVersion",
                 flags={"read_only": True},
+            )
+
+            system_data = cls._schema_on_200.system_data
+            system_data.created_at = AAZStrType(
+                serialized_name="createdAt",
+            )
+            system_data.created_by = AAZStrType(
+                serialized_name="createdBy",
+            )
+            system_data.created_by_type = AAZStrType(
+                serialized_name="createdByType",
+            )
+            system_data.last_modified_at = AAZStrType(
+                serialized_name="lastModifiedAt",
+            )
+            system_data.last_modified_by = AAZStrType(
+                serialized_name="lastModifiedBy",
+            )
+            system_data.last_modified_by_type = AAZStrType(
+                serialized_name="lastModifiedByType",
             )
 
             return cls._schema_on_200

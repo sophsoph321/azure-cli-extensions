@@ -19,9 +19,9 @@ class Show(AAZCommand):
     """
 
     _aaz_info = {
-        "version": "2023-09-01",
+        "version": "2025-09-01",
         "resources": [
-            ["mgmt-plane", "/subscriptions/{}/resourcegroups/{}/providers/microsoft.avs/privateclouds/{}", "2023-09-01"],
+            ["mgmt-plane", "/subscriptions/{}/resourcegroups/{}/providers/microsoft.avs/privateclouds/{}", "2025-09-01"],
         ]
     }
 
@@ -120,7 +120,7 @@ class Show(AAZCommand):
         def query_parameters(self):
             parameters = {
                 **self.serialize_query_param(
-                    "api-version", "2023-09-01",
+                    "api-version", "2025-09-01",
                     required=True,
                 ),
             }
@@ -177,6 +177,7 @@ class Show(AAZCommand):
             _schema_on_200.type = AAZStrType(
                 flags={"read_only": True},
             )
+            _schema_on_200.zones = AAZListType()
 
             identity = cls._schema_on_200.identity
             identity.principal_id = AAZStrType(
@@ -256,6 +257,9 @@ class Show(AAZCommand):
             properties.vcenter_password = AAZStrType(
                 serialized_name="vcenterPassword",
                 flags={"secret": True},
+            )
+            properties.vcf_license = AAZObjectType(
+                serialized_name="vcfLicense",
             )
             properties.virtual_network_id = AAZStrType(
                 serialized_name="virtualNetworkId",
@@ -377,6 +381,46 @@ class Show(AAZCommand):
             hosts = cls._schema_on_200.properties.management_cluster.hosts
             hosts.Element = AAZStrType()
 
+            vcf_license = cls._schema_on_200.properties.vcf_license
+            vcf_license.kind = AAZStrType(
+                flags={"required": True},
+            )
+            vcf_license.provisioning_state = AAZStrType(
+                serialized_name="provisioningState",
+                flags={"read_only": True},
+            )
+
+            disc_vcf5 = cls._schema_on_200.properties.vcf_license.discriminate_by("kind", "vcf5")
+            disc_vcf5.broadcom_contract_number = AAZStrType(
+                serialized_name="broadcomContractNumber",
+            )
+            disc_vcf5.broadcom_site_id = AAZStrType(
+                serialized_name="broadcomSiteId",
+            )
+            disc_vcf5.cores = AAZIntType(
+                flags={"required": True},
+            )
+            disc_vcf5.end_date = AAZStrType(
+                serialized_name="endDate",
+                flags={"required": True},
+            )
+            disc_vcf5.labels = AAZListType()
+            disc_vcf5.license_key = AAZStrType(
+                serialized_name="licenseKey",
+                flags={"secret": True},
+            )
+
+            labels = cls._schema_on_200.properties.vcf_license.discriminate_by("kind", "vcf5").labels
+            labels.Element = AAZObjectType()
+
+            _element = cls._schema_on_200.properties.vcf_license.discriminate_by("kind", "vcf5").labels.Element
+            _element.key = AAZStrType(
+                flags={"required": True},
+            )
+            _element.value = AAZStrType(
+                flags={"required": True},
+            )
+
             sku = cls._schema_on_200.sku
             sku.capacity = AAZIntType()
             sku.family = AAZStrType()
@@ -408,6 +452,9 @@ class Show(AAZCommand):
 
             tags = cls._schema_on_200.tags
             tags.Element = AAZStrType()
+
+            zones = cls._schema_on_200.zones
+            zones.Element = AAZStrType()
 
             return cls._schema_on_200
 
