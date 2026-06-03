@@ -5,6 +5,7 @@
 
 # pylint: disable=too-many-lines, disable=broad-except, disable=line-too-long
 
+import json
 import subprocess
 
 from azext_aks_agent.agent.aks import get_aks_credentials
@@ -613,3 +614,142 @@ def aks_agent(
 
         # Use AKSAgentManager to execute commands on the agent pod
         agent_manager.exec_aks_agent(flags)
+
+
+# pylint: disable=unused-argument
+def _get_k8s_extension_state(cmd, resource_group_name, cluster_name, extension_name, cluster_type):
+    """
+    Helper function to fetch the state of a Kubernetes extension from the k8s-extension module.
+    
+    Args:
+        cmd: CLI command context
+        resource_group_name: Azure resource group name
+        cluster_name: AKS cluster name
+        extension_name: Name of the extension
+        cluster_type: Type of cluster (e.g., 'managedClusters')
+    
+    Returns:
+        Extension resource object with properties like provisioning state, install state, version, etc.
+    
+    Raises:
+        Exception if k8s-extension module is not available or extension not found
+    """
+    try:
+        # Import the helper and constants from aks-preview module
+        from azext_aks_preview._helpers import get_k8s_extension_module
+        from azext_aks_preview._consts import (
+            CONST_K8S_EXTENSION_CUSTOM_MOD_NAME,
+            CONST_K8S_EXTENSION_CLIENT_FACTORY_MOD_NAME,
+        )
+    except ImportError:
+        raise CLIError(
+            "Please add CLI extension 'aks-preview' for cross-module k8s extension operations. "
+            "Run: az extension add --name aks-preview"
+        )
+    
+    try:
+        # Get the k8s-extension module and client factory
+        k8s_extension_custom_mod = get_k8s_extension_module(CONST_K8S_EXTENSION_CUSTOM_MOD_NAME)
+        client_factory = get_k8s_extension_module(CONST_K8S_EXTENSION_CLIENT_FACTORY_MOD_NAME)
+        k8s_client = client_factory.cf_k8s_extension_operation(cmd.cli_ctx)
+        
+        # Call show_k8s_extension to get the extension state
+        extension = k8s_extension_custom_mod.show_k8s_extension(
+            k8s_client,
+            resource_group_name,
+            cluster_name,
+            extension_name,
+            cluster_type,
+        )
+        return extension
+    except Exception as ex:
+        logger.error("Failed to retrieve k8s extension state: %s", ex)
+        raise
+
+
+def aks_agent_troubleshoot_cluster_extension(
+    cmd,
+    client,
+    resource_group_name,
+    cluster_name,
+    extension_name,
+    cluster_type,
+    prompt=None,
+    namespace=None,
+    model=None,
+    max_steps=10,
+    mode=None,
+    show_tool_output=False,
+):
+    """MVP command handler for cluster extension troubleshooting."""
+    console = get_console()
+    
+    # Use default prompt if not provided
+    if not prompt:
+        prompt = "The extension is unhealthy. Show the ARM resource state."
+    
+    console.print(f"\n🔍 Troubleshooting extension: {extension_name}", style=f"bold {HELP_COLOR}")
+    console.print(f"📋 Prompt: {prompt}\n", style=INFO_COLOR)
+    
+    try:
+        # Fetch the extension state
+        console.print("Fetching extension resource state...", style=INFO_COLOR)
+        extension = _get_k8s_extension_state(
+            cmd,
+            resource_group_name,
+            cluster_name,
+            extension_name,
+            cluster_type,
+        )
+        
+        # Display extension properties
+        console.print(f"\n✅ Extension found!\n", style=f"bold {SUCCESS_COLOR}")
+        
+        # Extract and display key properties
+        extension_dict = extension.as_dict() if hasattr(extension, 'as_dict') else vars(extension)
+        
+        console.print("📦 Extension Resource Properties:", style=f"bold {HELP_COLOR}")
+        console.print("-" * 60, style="dim")
+        
+        # Display core properties
+        key_properties = [
+            ("Name", "name"),
+            ("Type", "type"),
+            ("Extension Type", "extension_type"),
+            ("Provisioning State", "provisioning_state"),
+            ("Install State", "install_state"),
+            ("Version", "version"),
+            ("Release Train", "release_train"),
+            ("Auto Upgrade Enabled", "auto_upgrade_minor_version"),
+            ("Scope", "scope")        
+            ]
+        
+        for display_name, property_path in key_properties:
+            if display_name is None:
+                continue
+            
+            # Handle nested properties (e.g., "identity.type")
+            value = extension_dict
+            for part in property_path.split("."):
+                if isinstance(value, dict):
+                    value = value.get(part)
+                else:
+                    value = getattr(value, part, None)
+                if value is None:
+                    break
+            
+            if value is not None:
+                console.print(f"  {display_name}: {value}", style=INFO_COLOR)
+        
+        console.print("-" * 60, style="dim")
+        
+        # If show_tool_output flag is set, display full resource as JSON
+        if show_tool_output:
+            console.print(f"\n📄 Full Resource Output (JSON):\n", style=f"bold {HELP_COLOR}")
+            console.print(json.dumps(extension_dict, indent=2, default=str), style="dim")
+        
+        console.print(f"\n✨ Extension troubleshooting complete.\n", style=f"bold {SUCCESS_COLOR}")
+        
+    except Exception as ex:
+        console.print(f"\n❌ Error retrieving extension state: {str(ex)}\n", style=f"bold {ERROR_COLOR}")
+        raise CLIError(f"Failed to troubleshoot extension: {str(ex)}")

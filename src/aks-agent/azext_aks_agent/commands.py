@@ -26,5 +26,6 @@ def load_command_table(self, _):
 
     ) as g:
         g.custom_command("agent", "aks_agent")
+        g.custom_command("agent troubleshoot-cluster-extension", "aks_agent_troubleshoot_cluster_extension")
         g.custom_command("agent-init", "aks_agent_init")
         g.custom_command("agent-cleanup", "aks_agent_cleanup")

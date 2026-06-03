@@ -76,6 +76,67 @@ def load_arguments(self, _):
             help="Show AKS agent configuration and status information.",
         )
 
+    with self.argument_context("aks agent troubleshoot-cluster-extension") as c:
+        c.positional(
+            "prompt",
+            nargs='?',
+            help="Describe the extension issue. If omitted, a default unhealthy/failing prompt is used.",
+            required=False,
+        )
+        c.argument(
+            "resource_group_name",
+            options_list=["--resource-group", "-g"],
+            help="Name of resource group.",
+        )
+        c.argument(
+            "cluster_name",
+            options_list=["--name", "-c"],
+            help="Name of the managed cluster.",
+        )
+        c.argument(
+            "namespace",
+            options_list=["--namespace"],
+            help="The Kubernetes namespace where the AKS Agent is deployed. Required for cluster mode.",
+            required=False,
+        )
+        c.argument(
+            "extension_name",
+            options_list=["--extension-name", "-n"],
+            help="Name of the Kubernetes extension resource to troubleshoot.",
+            required=True,
+        )
+        c.argument(
+            "cluster_type",
+            options_list=["--cluster-type"],
+            help="The cluster resource type for the extension. Defaults to managedClusters.",
+            required=False,
+            default="managedClusters",
+        )
+        c.argument(
+            "max_steps",
+            type=int,
+            default=10,
+            required=False,
+            help="Maximum number of steps the LLM can take for troubleshooting.",
+        )
+        c.argument(
+            "model",
+            help="Specify the LLM provider and model or deployment to use for troubleshooting.",
+            required=False,
+            type=str,
+        )
+        c.argument(
+            "mode",
+            arg_type=get_enum_type(["cluster", "client"]),
+            help="The mode decides how the agent is deployed.",
+            default="cluster",
+        )
+        c.argument(
+            "show_tool_output",
+            help="Show the output of each tool that was called.",
+            action="store_true",
+        )
+
     with self.argument_context("aks agent-init") as c:
         c.argument(
             "resource_group_name",
