@@ -13,6 +13,7 @@ This package contains specialized manager classes for different Kubernetes opera
 """
 
 from .aks_agent_manager import AKSAgentManager, AKSAgentManagerClient
+from .extension_agent_manager import ExtensionAgentManager
 from .helm_manager import HelmManager, create_helm_manager
 from .pod_exec import exec_command_in_pod
 

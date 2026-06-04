@@ -683,73 +683,72 @@ def aks_agent_troubleshoot_cluster_extension(
 ):
     """MVP command handler for cluster extension troubleshooting."""
     console = get_console()
-    
-    # Use default prompt if not provided
-    if not prompt:
-        prompt = "The extension is unhealthy. Show the ARM resource state."
-    
-    console.print(f"\n🔍 Troubleshooting extension: {extension_name}", style=f"bold {HELP_COLOR}")
-    console.print(f"📋 Prompt: {prompt}\n", style=INFO_COLOR)
-    
+
+    subscription_id = get_subscription_id(cmd.cli_ctx)
+    kubeconfig = get_aks_credentials(
+        client,
+        resource_group_name,
+        cluster_name,
+    )
+
+    console.print("\nStep 1: Detect Extension Namespace", style=f"bold {HELP_COLOR}")
+    console.print(f"Extension: {extension_name} | Cluster: {cluster_name}", style=INFO_COLOR)
+
     try:
-        # Fetch the extension state
-        console.print("Fetching extension resource state...", style=INFO_COLOR)
-        extension = _get_k8s_extension_state(
-            cmd,
-            resource_group_name,
-            cluster_name,
-            extension_name,
-            cluster_type,
-        )
-        
-        # Display extension properties
-        console.print(f"\n✅ Extension found!\n", style=f"bold {SUCCESS_COLOR}")
-        
-        # Extract and display key properties
-        extension_dict = extension.as_dict() if hasattr(extension, 'as_dict') else vars(extension)
-        
-        console.print("📦 Extension Resource Properties:", style=f"bold {HELP_COLOR}")
-        console.print("-" * 60, style="dim")
-        
-        # Display core properties
-        key_properties = [
-            ("Name", "name"),
-            ("Type", "type"),
-            ("Extension Type", "extension_type"),
-            ("Provisioning State", "provisioning_state"),
-            ("Install State", "install_state"),
-            ("Version", "version"),
-            ("Release Train", "release_train"),
-            ("Auto Upgrade Enabled", "auto_upgrade_minor_version"),
-            ("Scope", "scope")        
-            ]
-        
-        for display_name, property_path in key_properties:
-            if display_name is None:
-                continue
-            
-            # Handle nested properties (e.g., "identity.type")
-            value = extension_dict
-            for part in property_path.split("."):
-                if isinstance(value, dict):
-                    value = value.get(part)
+        # Strategy 0: Query ARM resource for namespace (highest priority)
+        detected_ns_from_arm = None
+        if not namespace:  # Only attempt if user didn't provide explicit namespace
+            try:
+                console.print("\n  Querying ARM resource for namespace...", style=INFO_COLOR)
+                extension = _get_k8s_extension_state(
+                    cmd,
+                    resource_group_name,
+                    cluster_name,
+                    extension_name,
+                    cluster_type,
+                )
+                
+                # Try to extract namespace from extension resource
+                # Property path: scope.cluster.release_namespace or namespace
+                extension_dict = extension.as_dict() if hasattr(extension, 'as_dict') else vars(extension)
+                
+                # Check scope.cluster.release_namespace
+                if isinstance(extension_dict.get('scope'), dict):
+                    scope = extension_dict['scope']
+                    if isinstance(scope.get('cluster'), dict):
+                        detected_ns_from_arm = scope['cluster'].get('release_namespace')
+                
+                # Fallback: check namespace property directly
+                if not detected_ns_from_arm:
+                    detected_ns_from_arm = extension_dict.get('namespace')
+                
+                if detected_ns_from_arm:
+                    console.print(f"  ✓ Found namespace from ARM: {detected_ns_from_arm}", style=SUCCESS_COLOR)
+                    namespace = detected_ns_from_arm
                 else:
-                    value = getattr(value, part, None)
-                if value is None:
-                    break
-            
-            if value is not None:
-                console.print(f"  {display_name}: {value}", style=INFO_COLOR)
-        
-        console.print("-" * 60, style="dim")
-        
-        # If show_tool_output flag is set, display full resource as JSON
-        if show_tool_output:
-            console.print(f"\n📄 Full Resource Output (JSON):\n", style=f"bold {HELP_COLOR}")
-            console.print(json.dumps(extension_dict, indent=2, default=str), style="dim")
-        
-        console.print(f"\n✨ Extension troubleshooting complete.\n", style=f"bold {SUCCESS_COLOR}")
-        
+                    console.print("  • Namespace not found in ARM resource, will use detection strategies", style=INFO_COLOR)
+                    
+            except Exception as e:
+                logger.debug("Strategy 0 (ARM resource query) failed: %s", e)
+                console.print(f"  • Unable to query ARM resource, using fallback strategies", style=INFO_COLOR)
+
+        from azext_aks_agent.agent.k8s.extension_agent_manager import ExtensionAgentManager
+
+        ext_manager = ExtensionAgentManager(
+            resource_group_name=resource_group_name,
+            cluster_name=cluster_name,
+            subscription_id=subscription_id,
+            extension_name=extension_name,
+            extension_namespace=namespace,  # Use ARM-detected or user-provided namespace
+            kubeconfig_path=kubeconfig,
+        )
+
+        detected_ns = ext_manager.detected_namespace
+        pod_count = ext_manager.count_pods_in_namespace()
+
+        console.print(f"Extension namespace: {detected_ns}", style=SUCCESS_COLOR)
+        console.print(f"Pods in namespace '{detected_ns}': {pod_count}", style=SUCCESS_COLOR)
+
     except Exception as ex:
-        console.print(f"\n❌ Error retrieving extension state: {str(ex)}\n", style=f"bold {ERROR_COLOR}")
-        raise CLIError(f"Failed to troubleshoot extension: {str(ex)}")
+        console.print(f"\nError: {str(ex)}\n", style=f"bold {ERROR_COLOR}")
+        raise AzCLIError(f"Failed to detect extension namespace: {str(ex)}")
