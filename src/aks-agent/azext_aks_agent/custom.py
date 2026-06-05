@@ -681,74 +681,127 @@ def aks_agent_troubleshoot_cluster_extension(
     mode=None,
     show_tool_output=False,
 ):
-    """MVP command handler for cluster extension troubleshooting."""
-    console = get_console()
+    """AI-assisted troubleshooting for a Kubernetes extension on an AKS cluster."""
+    from azext_aks_agent.agent.k8s.extension_agent_manager import ExtensionAgentManager
 
-    subscription_id = get_subscription_id(cmd.cli_ctx)
-    kubeconfig = get_aks_credentials(
-        client,
-        resource_group_name,
-        cluster_name,
-    )
+    with CLITelemetryClient(event_type="troubleshoot_extension") as telemetry_client:
+        console = get_console()
 
-    console.print("\nStep 1: Detect Extension Namespace", style=f"bold {HELP_COLOR}")
-    console.print(f"Extension: {extension_name} | Cluster: {cluster_name}", style=INFO_COLOR)
+        subscription_id = get_subscription_id(cmd.cli_ctx)
+        kubeconfig = get_aks_credentials(
+            client,
+            resource_group_name,
+            cluster_name,
+        )
 
-    try:
-        # Strategy 0: Query ARM resource for namespace (highest priority)
-        detected_ns_from_arm = None
-        if not namespace:  # Only attempt if user didn't provide explicit namespace
+        use_client_mode = (mode == "client")
+        telemetry_client.mode = "client" if use_client_mode else "cluster"
+
+        console.print(f"\n🔧 Troubleshooting extension: {extension_name}", style=f"bold {HELP_COLOR}")
+        console.print(f"Cluster: {cluster_name} | Resource Group: {resource_group_name}", style=INFO_COLOR)
+
+        # Step 1: Detect extension namespace
+        # Strategy 0: Query ARM resource first (most authoritative)
+        if not namespace:
             try:
                 console.print("\n  Querying ARM resource for namespace...", style=INFO_COLOR)
-                extension = _get_k8s_extension_state(
-                    cmd,
-                    resource_group_name,
-                    cluster_name,
-                    extension_name,
-                    cluster_type,
+                extension_resource = _get_k8s_extension_state(
+                    cmd, resource_group_name, cluster_name, extension_name, cluster_type,
                 )
-                
-                # Try to extract namespace from extension resource
-                # Property path: scope.cluster.release_namespace or namespace
-                extension_dict = extension.as_dict() if hasattr(extension, 'as_dict') else vars(extension)
-                
-                # Check scope.cluster.release_namespace
-                if isinstance(extension_dict.get('scope'), dict):
-                    scope = extension_dict['scope']
-                    if isinstance(scope.get('cluster'), dict):
-                        detected_ns_from_arm = scope['cluster'].get('release_namespace')
-                
-                # Fallback: check namespace property directly
-                if not detected_ns_from_arm:
-                    detected_ns_from_arm = extension_dict.get('namespace')
-                
-                if detected_ns_from_arm:
-                    console.print(f"  ✓ Found namespace from ARM: {detected_ns_from_arm}", style=SUCCESS_COLOR)
-                    namespace = detected_ns_from_arm
+                extension_dict = (
+                    extension_resource.as_dict()
+                    if hasattr(extension_resource, 'as_dict')
+                    else vars(extension_resource)
+                )
+                # scope.cluster.release_namespace is the canonical field
+                scope = extension_dict.get('scope') or {}
+                cluster_scope = scope.get('cluster') or {}
+                namespace = cluster_scope.get('release_namespace') or extension_dict.get('namespace')
+
+                if namespace:
+                    console.print(f"  ✓ Namespace from ARM: {namespace}", style=SUCCESS_COLOR)
                 else:
-                    console.print("  • Namespace not found in ARM resource, will use detection strategies", style=INFO_COLOR)
-                    
+                    console.print("  • Namespace not in ARM resource, using fallback detection", style=INFO_COLOR)
             except Exception as e:
-                logger.debug("Strategy 0 (ARM resource query) failed: %s", e)
-                console.print(f"  • Unable to query ARM resource, using fallback strategies", style=INFO_COLOR)
+                logger.debug("ARM namespace query failed: %s", e)
+                console.print("  • ARM resource unavailable, using fallback detection", style=INFO_COLOR)
 
-        from azext_aks_agent.agent.k8s.extension_agent_manager import ExtensionAgentManager
+        extension_namespace = namespace
 
+        # Create ExtensionAgentManager — handles remaining namespace detection strategies
         ext_manager = ExtensionAgentManager(
             resource_group_name=resource_group_name,
             cluster_name=cluster_name,
             subscription_id=subscription_id,
             extension_name=extension_name,
-            extension_namespace=namespace,  # Use ARM-detected or user-provided namespace
+            extension_namespace=extension_namespace,
             kubeconfig_path=kubeconfig,
         )
-
         detected_ns = ext_manager.detected_namespace
-        pod_count = ext_manager.count_pods_in_namespace()
 
-        console.print(f"Extension namespace: {detected_ns}", style=SUCCESS_COLOR)
-        console.print(f"Pods in namespace '{detected_ns}': {pod_count}", style=SUCCESS_COLOR)
+        # Step 1 output: namespace + pod count in extension namespace
+        try:
+            pod_count = ext_manager.count_pods_in_namespace()
+            console.print(f"  Extension namespace: {detected_ns}", style=SUCCESS_COLOR)
+            console.print(f"  Pods in '{detected_ns}': {pod_count}", style=SUCCESS_COLOR)
+        except AzCLIError as e:
+            console.print(f"  ⚠️  Could not count pods in '{detected_ns}': {e}", style=WARNING_COLOR)
 
-    except Exception as ex:
-        console.print(f"\nError: {str(ex)}\n", style=f"bold {ERROR_COLOR}")
-        raise AzCLIError(f"Failed to detect extension namespace: {str(ex)}")
+        # Step 2: Build agent manager for execution
+        # The aks-agent pod lives in the aks-agent namespace, not the extension namespace.
+        # We run the agent there and pass the extension context via the prompt.
+        if use_client_mode:
+            agent_manager = AKSAgentManagerClient(
+                resource_group_name=resource_group_name,
+                cluster_name=cluster_name,
+                subscription_id=subscription_id,
+                kubeconfig_path=kubeconfig,
+            )
+        else:
+            # Use the aks-agent runtime namespace for pod execution checks.
+            # The extension namespace is separate and only used for diagnostics context.
+            agent_namespace = "aks-agent"
+            agent_manager = AKSAgentManager(
+                resource_group_name=resource_group_name,
+                cluster_name=cluster_name,
+                namespace=agent_namespace,
+                subscription_id=subscription_id,
+                kubeconfig_path=kubeconfig,
+            )
+
+            # Verify aks-agent pods are available before running
+            success, result = agent_manager.get_agent_pods()
+            if not success:
+                if mode is None:
+                    console.print(
+                        "⚠️  AKS agent pods not found in cluster mode. Falling back to client mode.",
+                        style=WARNING_COLOR,
+                    )
+                    agent_manager = AKSAgentManagerClient(
+                        resource_group_name=resource_group_name,
+                        cluster_name=cluster_name,
+                        subscription_id=subscription_id,
+                        kubeconfig_path=kubeconfig,
+                    )
+                    telemetry_client.mode = "client"
+                else:
+                    cmd_flags = agent_manager.init_command_flags()
+                    raise CLIError(
+                        f"Failed to find AKS agent pods: {result}\n"
+                        f"Run 'az aks agent-init {cmd_flags}' to initialize the deployment, "
+                        f"or use --mode client to run locally."
+                    )
+
+        # Step 3: Build extension-scoped prompt and execute
+        system_prompt = ext_manager.get_extension_diagnostics_prompt(prompt)
+
+        flags = f'"{system_prompt}"'
+        if model:
+            flags += f' --model "{model}"'
+        if max_steps:
+            flags += f' --max-steps {max_steps}'
+        if show_tool_output:
+            flags += ' --show-tool-output'
+
+        console.print("\n🤖 Starting AI-assisted diagnostics...\n", style=f"bold {HELP_COLOR}")
+        agent_manager.exec_aks_agent(flags)

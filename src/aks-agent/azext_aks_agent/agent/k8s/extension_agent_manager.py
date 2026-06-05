@@ -255,6 +255,40 @@ class ExtensionAgentManager(AKSAgentManager):
             logger.error(error_msg)
             raise AzCLIError(error_msg)
     
+    def get_extension_diagnostics_prompt(self, user_prompt: Optional[str] = None) -> str:
+        """
+        Build a system prompt that scopes the AI agent to this extension.
+
+        Args:
+            user_prompt: Optional user-provided description of the issue.
+                         Defaults to a generic unhealthy/failing prompt.
+
+        Returns:
+            Formatted system prompt string to pass to exec_aks_agent.
+        """
+        if not user_prompt:
+            user_prompt = f"The {self.extension_name} extension is unhealthy or failing. Diagnose the issue."
+
+        return (
+            f"You are troubleshooting the Azure Kubernetes extension '{self.extension_name}' "
+            f"on AKS cluster '{self.cluster_name}' in resource group '{self.resource_group_name}'.\n"
+            f"The extension is deployed in Kubernetes namespace '{self.detected_namespace}'.\n\n"
+            f"Collect diagnostics from both ARM and Kubernetes layers:\n"
+            f"  1. Run 'az k8s-extension show --name {self.extension_name} "
+            f"--cluster-name {self.cluster_name} --resource-group {self.resource_group_name} "
+            f"--cluster-type managedClusters' to get ARM state (provisioning state, install state, version, identity config, error messages).\n"
+            f"  2. Inspect resources in namespace '{self.detected_namespace}': pods, deployments, daemonsets, events, service accounts, RBAC bindings.\n"
+            f"  3. Correlate findings across both layers to identify root cause(s).\n\n"
+            f"USER REQUEST: {user_prompt}\n\n"
+            f"Provide output in this structure:\n"
+            f"- Summary: 2-3 sentence overview\n"
+            f"- Findings: Bullet list of observations\n"
+            f"- Root Cause: Most likely cause(s)\n"
+            f"- Recommended Actions: Numbered remediation steps\n"
+            f"- Evidence: Specific resource names, error codes, event timestamps\n\n"
+            f"Be specific. If data is unavailable, state exactly what is missing and why."
+        )
+
     def get_pods_info(self) -> dict:
         """
         Get detailed information about pods in the extension's namespace.

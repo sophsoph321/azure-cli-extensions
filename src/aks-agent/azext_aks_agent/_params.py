@@ -52,7 +52,7 @@ def load_arguments(self, _):
             "mode",
             arg_type=get_enum_type(["cluster", "client"]),
             help="The mode decides how the agent is deployed.",
-            default="cluster",
+            required=False,
         )
         c.argument(
             "no_echo_request",
@@ -129,7 +129,7 @@ def load_arguments(self, _):
             "mode",
             arg_type=get_enum_type(["cluster", "client"]),
             help="The mode decides how the agent is deployed.",
-            default="cluster",
+            required=False,
         )
         c.argument(
             "show_tool_output",
