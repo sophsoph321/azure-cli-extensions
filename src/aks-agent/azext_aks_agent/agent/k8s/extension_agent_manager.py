@@ -255,30 +255,65 @@ class ExtensionAgentManager(AKSAgentManager):
             logger.error(error_msg)
             raise AzCLIError(error_msg)
     
-    def get_extension_diagnostics_prompt(self, user_prompt: Optional[str] = None) -> str:
+    def get_extension_diagnostics_prompt(
+        self,
+        user_prompt: Optional[str] = None,
+        arm_state: Optional[dict] = None,
+    ) -> str:
         """
         Build a system prompt that scopes the AI agent to this extension.
+
+        ARM state is fetched by the CLI handler (which has credentials) and passed in here
+        so the agent does not need to run 'az k8s-extension show' itself — Azure CLI commands
+        are blocked in the read-only aks-agent pod environment.
 
         Args:
             user_prompt: Optional user-provided description of the issue.
                          Defaults to a generic unhealthy/failing prompt.
+            arm_state: Pre-fetched extension ARM resource dict from the CLI handler.
+                       When provided, embedded directly into the prompt as evidence.
 
         Returns:
             Formatted system prompt string to pass to exec_aks_agent.
         """
+        import json as _json
+
         if not user_prompt:
             user_prompt = f"The {self.extension_name} extension is unhealthy or failing. Diagnose the issue."
+
+        # Embed pre-fetched ARM state so the agent does not need to call az CLI
+        if arm_state:
+            # Surface only the most diagnostic fields to keep prompt concise
+            arm_fields = {
+                k: arm_state.get(k)
+                for k in (
+                    "name", "extension_type", "provisioning_state", "install_state",
+                    "version", "release_train", "auto_upgrade_minor_version",
+                    "scope", "identity", "statuses", "error_info",
+                )
+                if arm_state.get(k) is not None
+            }
+            arm_section = (
+                f"ARM Resource State (pre-fetched — do NOT call 'az k8s-extension show'):\n"
+                f"```json\n{_json.dumps(arm_fields, indent=2, default=str)}\n```\n"
+            )
+        else:
+            arm_section = (
+                "ARM Resource State: unavailable (could not be fetched before agent start).\n"
+            )
 
         return (
             f"You are troubleshooting the Azure Kubernetes extension '{self.extension_name}' "
             f"on AKS cluster '{self.cluster_name}' in resource group '{self.resource_group_name}'.\n"
             f"The extension is deployed in Kubernetes namespace '{self.detected_namespace}'.\n\n"
-            f"Collect diagnostics from both ARM and Kubernetes layers:\n"
-            f"  1. Run 'az k8s-extension show --name {self.extension_name} "
-            f"--cluster-name {self.cluster_name} --resource-group {self.resource_group_name} "
-            f"--cluster-type managedClusters' to get ARM state (provisioning state, install state, version, identity config, error messages).\n"
-            f"  2. Inspect resources in namespace '{self.detected_namespace}': pods, deployments, daemonsets, events, service accounts, RBAC bindings.\n"
+            f"{arm_section}\n"
+            f"Your task:\n"
+            f"  1. Analyse the ARM state above.\n"
+            f"  2. Inspect Kubernetes resources in namespace '{self.detected_namespace}': "
+            f"pods, deployments, daemonsets, replicasets, events, service accounts, RBAC bindings.\n"
             f"  3. Correlate findings across both layers to identify root cause(s).\n\n"
+            f"IMPORTANT: Do NOT run 'az k8s-extension show' or any other Azure CLI command — "
+            f"Azure CLI is unavailable in this environment. Use only kubectl-equivalent tools.\n\n"
             f"USER REQUEST: {user_prompt}\n\n"
             f"Provide output in this structure:\n"
             f"- Summary: 2-3 sentence overview\n"

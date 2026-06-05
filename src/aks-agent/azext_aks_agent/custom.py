@@ -700,33 +700,47 @@ def aks_agent_troubleshoot_cluster_extension(
         console.print(f"\n🔧 Troubleshooting extension: {extension_name}", style=f"bold {HELP_COLOR}")
         console.print(f"Cluster: {cluster_name} | Resource Group: {resource_group_name}", style=INFO_COLOR)
 
-        # Step 1: Detect extension namespace
-        # Strategy 0: Query ARM resource first (most authoritative)
-        if not namespace:
+        # Step 1: Detect extension namespace + fetch ARM state for prompt
+        # Both use a single _get_k8s_extension_state call — namespace detection and ARM evidence.
+        arm_state: dict = {}
+        extension_namespace = namespace  # user-provided takes priority
+
+        if not extension_namespace:
             try:
-                console.print("\n  Querying ARM resource for namespace...", style=INFO_COLOR)
+                console.print("\n  Querying ARM resource for namespace and state...", style=INFO_COLOR)
                 extension_resource = _get_k8s_extension_state(
                     cmd, resource_group_name, cluster_name, extension_name, cluster_type,
                 )
-                extension_dict = (
+                arm_state = (
                     extension_resource.as_dict()
                     if hasattr(extension_resource, 'as_dict')
                     else vars(extension_resource)
                 )
                 # scope.cluster.release_namespace is the canonical field
-                scope = extension_dict.get('scope') or {}
+                scope = arm_state.get('scope') or {}
                 cluster_scope = scope.get('cluster') or {}
-                namespace = cluster_scope.get('release_namespace') or extension_dict.get('namespace')
+                extension_namespace = cluster_scope.get('release_namespace') or arm_state.get('namespace')
 
-                if namespace:
-                    console.print(f"  ✓ Namespace from ARM: {namespace}", style=SUCCESS_COLOR)
+                if extension_namespace:
+                    console.print(f"  ✓ Namespace from ARM: {extension_namespace}", style=SUCCESS_COLOR)
                 else:
                     console.print("  • Namespace not in ARM resource, using fallback detection", style=INFO_COLOR)
             except Exception as e:
-                logger.debug("ARM namespace query failed: %s", e)
+                logger.debug("ARM resource query failed: %s", e)
                 console.print("  • ARM resource unavailable, using fallback detection", style=INFO_COLOR)
-
-        extension_namespace = namespace
+        else:
+            # Namespace was provided explicitly — still fetch ARM state for the prompt
+            try:
+                extension_resource = _get_k8s_extension_state(
+                    cmd, resource_group_name, cluster_name, extension_name, cluster_type,
+                )
+                arm_state = (
+                    extension_resource.as_dict()
+                    if hasattr(extension_resource, 'as_dict')
+                    else vars(extension_resource)
+                )
+            except Exception as e:
+                logger.debug("ARM state fetch failed: %s", e)
 
         # Create ExtensionAgentManager — handles remaining namespace detection strategies
         ext_manager = ExtensionAgentManager(
@@ -792,8 +806,8 @@ def aks_agent_troubleshoot_cluster_extension(
                         f"or use --mode client to run locally."
                     )
 
-        # Step 3: Build extension-scoped prompt and execute
-        system_prompt = ext_manager.get_extension_diagnostics_prompt(prompt)
+        # Step 3: Build extension-scoped prompt with pre-fetched ARM state and execute
+        system_prompt = ext_manager.get_extension_diagnostics_prompt(prompt, arm_state=arm_state)
 
         flags = f'"{system_prompt}"'
         if model:
