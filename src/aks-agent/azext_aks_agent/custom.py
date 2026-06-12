@@ -5,7 +5,7 @@
 
 # pylint: disable=too-many-lines, disable=broad-except, disable=line-too-long
 
-import json
+import shlex
 import subprocess
 
 from azext_aks_agent.agent.aks import get_aks_credentials
@@ -705,17 +705,20 @@ def aks_agent_troubleshoot_cluster_extension(
         arm_state: dict = {}
         extension_namespace = namespace  # user-provided takes priority
 
-        if not extension_namespace:
-            try:
+        try:
+            if not extension_namespace:
                 console.print("\n  Querying ARM resource for namespace and state...", style=INFO_COLOR)
-                extension_resource = _get_k8s_extension_state(
-                    cmd, resource_group_name, cluster_name, extension_name, cluster_type,
-                )
-                arm_state = (
-                    extension_resource.as_dict()
-                    if hasattr(extension_resource, 'as_dict')
-                    else vars(extension_resource)
-                )
+
+            extension_resource = _get_k8s_extension_state(
+                cmd, resource_group_name, cluster_name, extension_name, cluster_type,
+            )
+            arm_state = (
+                extension_resource.as_dict()
+                if hasattr(extension_resource, 'as_dict')
+                else vars(extension_resource)
+            )
+
+            if not extension_namespace:
                 # scope.cluster.release_namespace is the canonical field
                 scope = arm_state.get('scope') or {}
                 cluster_scope = scope.get('cluster') or {}
@@ -725,21 +728,11 @@ def aks_agent_troubleshoot_cluster_extension(
                     console.print(f"  ✓ Namespace from ARM: {extension_namespace}", style=SUCCESS_COLOR)
                 else:
                     console.print("  • Namespace not in ARM resource, using fallback detection", style=INFO_COLOR)
-            except Exception as e:
+        except Exception as e:
+            if not extension_namespace:
                 logger.debug("ARM resource query failed: %s", e)
                 console.print("  • ARM resource unavailable, using fallback detection", style=INFO_COLOR)
-        else:
-            # Namespace was provided explicitly — still fetch ARM state for the prompt
-            try:
-                extension_resource = _get_k8s_extension_state(
-                    cmd, resource_group_name, cluster_name, extension_name, cluster_type,
-                )
-                arm_state = (
-                    extension_resource.as_dict()
-                    if hasattr(extension_resource, 'as_dict')
-                    else vars(extension_resource)
-                )
-            except Exception as e:
+            else:
                 logger.debug("ARM state fetch failed: %s", e)
 
         # Create ExtensionAgentManager — handles remaining namespace detection strategies
@@ -809,9 +802,13 @@ def aks_agent_troubleshoot_cluster_extension(
         # Step 3: Build extension-scoped prompt with pre-fetched ARM state and execute
         system_prompt = ext_manager.get_extension_diagnostics_prompt(prompt, arm_state=arm_state)
 
-        flags = f'"{system_prompt}"'
+        # shlex.quote wraps the prompt in single quotes and escapes any internal
+        # single quotes, handling all shell metacharacters (backticks, $(), !,
+        # newlines, etc.). This is safe for bash -c (cluster mode) and also
+        # round-trips correctly through shlex.split used in client mode.
+        flags = shlex.quote(system_prompt)
         if model:
-            flags += f' --model "{model}"'
+            flags += f' --model {shlex.quote(model)}'
         if max_steps:
             flags += f' --max-steps {max_steps}'
         if show_tool_output:

@@ -43,21 +43,24 @@ class ExtensionAgentManager(AKSAgentManager):
         self.resource_group_name = resource_group_name
         self.cluster_name = cluster_name
         self.subscription_id = subscription_id
-        
-        # Detect extension namespace if not provided
-        if not extension_namespace:
-            extension_namespace = self._detect_extension_namespace()
-        
-        self.detected_namespace = extension_namespace
-        
-        # Initialize parent with extension namespace
+
+        # Initialize parent first so self.apps_v1 / self.core_v1 are available
+        # for namespace detection strategies that query the cluster.
+        # Use a placeholder namespace; self.namespace is updated after detection.
         super().__init__(
             resource_group_name=resource_group_name,
             cluster_name=cluster_name,
             subscription_id=subscription_id,
-            namespace=extension_namespace,
+            namespace=extension_namespace or "default",
             kubeconfig_path=kubeconfig_path
         )
+
+        # Detect extension namespace if not provided (requires self.apps_v1 / self.core_v1)
+        if not extension_namespace:
+            extension_namespace = self._detect_extension_namespace()
+            self.namespace = extension_namespace
+
+        self.detected_namespace = extension_namespace
 
         logger.info("ExtensionAgentManager initialized for extension '%s' in namespace '%s'",
                     extension_name, extension_namespace)
@@ -67,7 +70,6 @@ class ExtensionAgentManager(AKSAgentManager):
         Detect the extension's namespace using multiple strategies.
         
         Strategy precedence:
-        0. Query ARM extension resource for namespace property
         1. Known extension type mappings
         2. Search for deployment with extension label
         3. Try extension-specific namespace patterns
@@ -81,15 +83,6 @@ class ExtensionAgentManager(AKSAgentManager):
             AzCLIError: If unable to initialize Kubernetes client
         """
         logger.info("Attempting to detect namespace for extension '%s'", self.extension_name)
-        
-        # Strategy 0: Query ARM extension resource for namespace property
-        try:
-            namespace = self._get_namespace_from_arm_resource()
-            if namespace:
-                logger.info("Strategy 0 (ARM resource): Using namespace: %s", namespace)
-                return namespace
-        except Exception as e:
-            logger.debug("Strategy 0 failed: %s", e)
         
         # Strategy 1: Known extension mappings
         known_namespaces = {
@@ -140,37 +133,6 @@ class ExtensionAgentManager(AKSAgentManager):
             self.extension_name, default_ns
         )
         return default_ns
-    
-    def _get_namespace_from_arm_resource(self) -> Optional[str]:
-        """
-        Query the ARM extension resource to extract the namespace.
-        
-        Looks for namespace in:
-        - scope.cluster.release_namespace
-        - namespace property
-        
-        Returns:
-            Namespace extracted from ARM resource, or None if not found
-        """
-        try:
-            logger.debug("Strategy 0: Querying ARM resource for extension '%s'", self.extension_name)
-            
-            # Import here to avoid circular imports and handle missing aks-preview gracefully
-            try:
-                from azext_aks_agent.custom import _get_k8s_extension_state
-            except ImportError:
-                logger.debug("Unable to import _get_k8s_extension_state")
-                return None
-            
-            # Note: This requires cmd context which we don't have here.
-            # Return None to fall through to next strategy.
-            # The calling function in custom.py should use this approach instead.
-            logger.debug("Strategy 0 requires cmd context - deferring to custom.py layer")
-            return None
-            
-        except Exception as e:
-            logger.debug("Strategy 0 ARM resource query failed: %s", e)
-            return None
 
     def _search_deployment_namespace(self) -> Optional[str]:
         """
@@ -276,26 +238,40 @@ class ExtensionAgentManager(AKSAgentManager):
         Returns:
             Formatted system prompt string to pass to exec_aks_agent.
         """
-        import json as _json
-
         if not user_prompt:
             user_prompt = f"The {self.extension_name} extension is unhealthy or failing. Diagnose the issue."
 
-        # Embed pre-fetched ARM state so the agent does not need to call az CLI
+        # Embed pre-fetched ARM state as flat key:value lines.
+        # Raw JSON is intentionally avoided here — multi-line JSON with brackets, newlines, and
+        # special characters breaks shell argument parsing when the prompt is passed to exec_aks_agent.
         if arm_state:
-            # Surface only the most diagnostic fields to keep prompt concise
-            arm_fields = {
-                k: arm_state.get(k)
-                for k in (
-                    "name", "extension_type", "provisioning_state", "install_state",
-                    "version", "release_train", "auto_upgrade_minor_version",
-                    "scope", "identity", "statuses", "error_info",
-                )
-                if arm_state.get(k) is not None
-            }
+            scope = arm_state.get('scope') or {}
+            cluster_scope = scope.get('cluster') or {}
+            release_ns = cluster_scope.get('release_namespace') or 'unknown'
+
+            # Format statuses as a single sanitised line per entry
+            statuses = arm_state.get('statuses') or []
+            status_lines = []
+            for s in statuses:
+                code = s.get('code') or 'unknown'
+                msg = s.get('message') or ''
+                # Collapse whitespace and remove chars that break shell argument parsing
+                msg = ' '.join(msg.split())  # collapse newlines/tabs/spaces
+                msg = msg[:300] + ('...' if len(msg) > 300 else '')  # cap length
+                status_lines.append(f"  - [{code}] {msg}")
+            statuses_text = '\n'.join(status_lines) if status_lines else '  (none)'
+
             arm_section = (
-                f"ARM Resource State (pre-fetched — do NOT call 'az k8s-extension show'):\n"
-                f"```json\n{_json.dumps(arm_fields, indent=2, default=str)}\n```\n"
+                "ARM Resource State (pre-fetched - do NOT call az k8s-extension show):\n"
+                f"  name: {arm_state.get('name')}\n"
+                f"  extensionType: {arm_state.get('extension_type')}\n"
+                f"  provisioningState: {arm_state.get('provisioning_state')}\n"
+                f"  installState: {arm_state.get('install_state')}\n"
+                f"  version: {arm_state.get('current_version') or arm_state.get('version')}\n"
+                f"  releaseTrain: {arm_state.get('release_train')}\n"
+                f"  autoUpgradeMinorVersion: {arm_state.get('auto_upgrade_minor_version')}\n"
+                f"  releaseNamespace: {release_ns}\n"
+                f"  statuses:\n{statuses_text}\n"
             )
         else:
             arm_section = (
@@ -324,55 +300,3 @@ class ExtensionAgentManager(AKSAgentManager):
             f"Be specific. If data is unavailable, state exactly what is missing and why."
         )
 
-    def get_pods_info(self) -> dict:
-        """
-        Get detailed information about pods in the extension's namespace.
-        
-        Returns:
-            Dictionary with pod count and basic information
-        """
-        try:
-            pod_list = self.core_v1.list_namespaced_pod(
-                namespace=self.detected_namespace
-            )
-            
-            pods_by_status = {
-                'Running': [],
-                'Pending': [],
-                'Failed': [],
-                'Other': []
-            }
-            
-            for pod in pod_list.items:
-                pod_info = {
-                    'name': pod.metadata.name,
-                    'phase': pod.status.phase,
-                    'ready': False
-                }
-                
-                # Check if pod is ready
-                if pod.status.conditions:
-                    for condition in pod.status.conditions:
-                        if condition.type == "Ready" and condition.status == "True":
-                            pod_info['ready'] = True
-                            break
-                
-                phase = pod.status.phase
-                if phase == 'Running':
-                    pods_by_status['Running'].append(pod_info)
-                elif phase == 'Pending':
-                    pods_by_status['Pending'].append(pod_info)
-                elif phase == 'Failed':
-                    pods_by_status['Failed'].append(pod_info)
-                else:
-                    pods_by_status['Other'].append(pod_info)
-            
-            return {
-                'namespace': self.detected_namespace,
-                'total_pods': len(pod_list.items),
-                'pods_by_status': pods_by_status
-            }
-            
-        except Exception as e:
-            logger.error("Failed to get pod info: %s", e)
-            raise AzCLIError(f"Failed to get pod information: {e}")

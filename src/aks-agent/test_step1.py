@@ -91,28 +91,14 @@ def demo_step1(extension_name, cluster_name, resource_group, extension_namespace
         pod_count = ext_manager.count_pods_in_namespace()
         print(f"✅ Total pods: {pod_count}")
         
-        # Step 1c: Get detailed pod information
-        print_section("Pod Status Breakdown")
-        
-        pods_info = ext_manager.get_pods_info()
-        
-        for status, pods in pods_info['pods_by_status'].items():
-            count = len(pods)
-            if count > 0:
-                status_symbol = "🟢" if status == "Running" else "🟡" if status == "Pending" else "🔴" if status == "Failed" else "⚪"
-                print(f"\n{status_symbol} {status}: {count} pod(s)")
-                
-                for pod in pods:
-                    ready_str = "✓ Ready" if pod.get('ready') else "✗ Not Ready"
-                    print(f"   • {pod['name']:45s} [{ready_str}]")
+        # Step 1c: Pod count summary
+        print_section("Pod Summary")
+        print(f"Total pods currently found in '{detected_ns}': {pod_count}")
         
         # Summary
         print_header(f"Results Summary")
         print(f"✅ Extension Namespace: {detected_ns}")
         print(f"✅ Total Pods Found: {pod_count}")
-        print(f"✅ Running Pods: {len(pods_info['pods_by_status'].get('Running', []))}")
-        print(f"✅ Pending Pods: {len(pods_info['pods_by_status'].get('Pending', []))}")
-        print(f"✅ Failed Pods: {len(pods_info['pods_by_status'].get('Failed', []))}")
         
         print("\n✨ Step 1 demonstration complete!\n")
         return True
